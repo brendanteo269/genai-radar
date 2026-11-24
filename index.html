@@ -96,6 +96,19 @@ details summary { cursor: pointer; color: var(--ink); font-weight: 600; }
 details li { margin-bottom: 6px; }
 footer { margin-top: 28px; color: var(--muted); font-size: 13px; max-width: 70ch; }
 
+/* Motion: short, once per render, and off for people who ask for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .tile { animation: rise 220ms ease-out both; animation-delay: calc(var(--i, 0) * 25ms); transition: border-color 150ms, transform 150ms; }
+  .tile:hover { transform: translateY(-2px); }
+  .cols .bar { transform-origin: bottom; animation: growY 380ms cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 20ms); }
+  .rows .fill { transform-origin: left; animation: growX 380ms cubic-bezier(.2, .7, .2, 1) both; }
+  dialog[open] { animation: rise 160ms ease-out both; }
+  dialog[open]::backdrop { animation: fade 160ms ease-out both; }
+}
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes growY { from { transform: scaleY(0); } }
+@keyframes growX { from { transform: scaleX(0); } }
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 24px 16px 48px; }
   aside { position: static; }
@@ -272,7 +285,7 @@ function renderDashboard(list) {
   for (const x of days) {
     const col = el("div", "col"); col.title = short(x.d) + ": " + x.n + (x.n === 1 ? " card" : " cards");
     if (x.n === max && x.n > 0 && !labelled) { col.append(el("div", "cap", x.n)); labelled = true; }   // label the peak only
-    const bar = el("div", "bar"); bar.style.height = (x.n / max * 84) + "%";
+    const bar = el("div", "bar"); bar.style.height = (x.n / max * 84) + "%"; bar.style.setProperty("--i", days.indexOf(x));
     if (x.n) col.append(bar);
     cols.append(col);
   }
@@ -328,7 +341,7 @@ function render() {
     (state.source === "All" || c.source === state.source) &&
     (state.audience === "All" || (c.audiences || []).includes(state.audience)) && (!state.testedOnly || c.test));
   renderDashboard(list);
-  document.getElementById("cards").replaceChildren(...(list.length ? list.map(tile) : [el("p", "empty", "No cards match this filter yet.")]));
+  document.getElementById("cards").replaceChildren(...(list.length ? list.map((c, i) => { const t = tile(c); t.style.setProperty("--i", Math.min(i, 12)); return t; }) : [el("p", "empty", "No cards match this filter yet.")]));
 }
 
 async function load() {

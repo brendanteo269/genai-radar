@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GenAI Radar: a short brief</title>
+<style>
+@page { size: A4; margin: 22mm 24mm; }
+body { margin: 0; color: #1c1b19; font: 11pt/1.55 Georgia, "Times New Roman", serif; }
+h1 { font: 700 22pt/1.15 -apple-system, "Helvetica Neue", Arial, sans-serif; margin: 0 0 3pt; }
+.by { font: 9.5pt/1.4 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #625f58; margin: 0 0 18pt; }
+h2 { font: 700 11.5pt/1.3 -apple-system, "Helvetica Neue", Arial, sans-serif; margin: 16pt 0 4pt; }
+p { margin: 0 0 8pt; }
+a { color: #0a6b3a; text-decoration: none; }
+code { font-size: 9.5pt; }
+img { width: 11pt; height: 11pt; object-fit: contain; vertical-align: -1.5pt; margin-right: 2.5pt; }
+.page2 { break-before: page; }
+.foot { margin-top: 16pt; font: 8.5pt/1.4 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #625f58; }
+</style>
+</head>
+<body>
+
+<h1>GenAI Radar</h1>
+<p class="by">Brendan Teo · November 2026 · <a href="https://heineken-radar-project.vercel.app">heineken-radar-project.vercel.app</a> · <a href="https://github.com/brendanteo269/genai-radar">github.com/brendanteo269/genai-radar</a></p>
+
+<h2 style="margin-top:0">Why I built this</h2>
+<p>There is a new AI tool every week, and every announcement says it changes everything. If you work in sales or finance at a brewery, you do not have an hour to work out which ones are real. Someone ends up doing that reading for the whole team, usually badly and usually late.</p>
+<p>I wanted to see if I could make that job small. So I built a page that reads the announcements every morning and gives a straight answer on each one: what it is, who should care, and whether it is worth trying this week.</p>
+
+<h2>What it does</h2>
+<p>Each morning it reads the announcement feeds from <img src="https://openai.com/favicon.ico" alt="">OpenAI, <img src="https://www.google.com/favicon.ico" alt="">Google, <img src="https://www.microsoft.com/favicon.ico" alt="" onerror="this.remove()">Microsoft 365, <img src="https://www.theverge.com/favicon.ico" alt="">The Verge and <img src="https://zapier.com/favicon.ico" alt="">Zapier. Most of what comes through is not a tool at all. It is news, or funding, or something only developers can use. Those get thrown out.</p>
+<p>What is left gets one short card. The card says what the tool does in a sentence, which team it suits (brand and marketing, sales, supply chain and brewery, finance, or internal comms and HR), one real task to try it on, and a verdict: try now, watch, or skip. It also names the catch, including what company data you should keep out of it.</p>
+<p>The page then lets you filter by team, so a finance person only sees finance cards. Bigger changes get bigger cards.</p>
+
+<h2>The part I care about most</h2>
+<p>An AI reading a press release is not the same as a person trying the tool. Announcements are written to impress, so a card based only on one can be too kind. I did not want the page to hide that.</p>
+<p>So every card is labelled. “Auto-graded” means Claude read the announcement and nobody used the tool. “Tested” means I sat down with it on one real task and wrote down what worked and what went wrong. I have not tested any yet. That is what I am doing next, and I think it is the part that actually matters.</p>
+
+<h2>What the first run taught me</h2>
+<p>The first real run read 20 announcements and produced 2 cards. That looked bad, and my first guess was that the grading was too strict.</p>
+<p>So I went through the 16 it rejected, one by one. Fifteen were plainly not tools: news stories, a research talk, developer plumbing. Only one was a fair argument. The grading was fine. The sources were the problem, because news feeds mostly carry news. I added a feed of actual product release notes and left the rules alone. I am glad I checked before loosening anything.</p>
+
+<div class="page2">
+<h2 style="margin-top:0">How it works, for the technical reader</h2>
+<p>There are four parts. <img src="https://n8n.io/favicon.ico" alt="">n8n runs the workflow, <img src="https://claude.ai/favicon.ico" alt="">Claude does the grading, <img src="https://github.com/favicon.ico" alt="">GitHub stores the result, and <img src="https://vercel.com/favicon.ico" alt="">Vercel serves the page.</p>
+<p>The n8n workflow has 16 nodes and two ways in: a timer at 8am Singapore time, and a form where you paste one link to grade it on demand. It reads the feeds, keeps anything from the last seven days, and skips links it has already handled.</p>
+<p>Each remaining item goes to Claude Haiku in its own HTTP call. The prompt is one file, <code>prompt.md</code>, and it holds the five audiences and the grading rules. Claude has to answer in a fixed JSON shape or say the item is not relevant. Pointing the radar at a different company would mean editing that one file.</p>
+<p>The cards are saved as a single file, <code>cards.json</code>, which the workflow commits to GitHub. The page is one static HTML file with no framework and no chart library. Every commit redeploys it.</p>
+
+<h2>A few choices I would defend</h2>
+<p>Nothing half-done gets saved. If Claude’s reply is missing a field, invents a verdict, or the call fails, the item is counted and dropped. That happened to 2 of the 20 in the first run.</p>
+<p>Failures get retried on their own. A link is only marked as seen after a clean answer, and that list lives in the same file as the cards. So a bad run fixes itself the next morning without me touching it.</p>
+<p>One news site blocks automated readers. I dropped it instead of working around the block.</p>
+<p>The code inside each n8n node lives in its own file, and a small script runs each one outside n8n against the awkward cases. It copies one n8n quirk I found the hard way: the code sandbox has no URL parser.</p>
+
+<h2>Where it is weak</h2>
+<p>It runs on my laptop, so when the laptop is off nothing updates. Six feeds is a sample and not the whole market. Anthropic has no feed at all, so Claude news has to go in through the form. There are only two real cards so far, and it needs a couple of weeks of running before the charts mean anything. And it is not a data policy. It reminds people what to keep out of a tool, but it cannot decide that for a company.</p>
+
+<h2>How I built it</h2>
+<p>Over a couple of days, with Claude Code doing most of the typing. My part was deciding what it should do, what it should refuse to do, and checking it against real output instead of trusting that it worked.</p>
+
+<p class="foot">An independent project, built with HEINEKEN’s Global GenAI Lab in mind. Not affiliated with, or endorsed by, HEINEKEN or any company named here. Logos only identify the tools and sources used.</p>
+</div>
+
+</body>
+</html>

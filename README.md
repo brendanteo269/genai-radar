@@ -43,3 +43,4 @@ You can also paste a link into a form to grade one tool on demand.
 ## More
 
 - [TECHNICAL.md](TECHNICAL.md): how it is built and how to run it.
+- [GenAI_Radar_Brief.pdf](GenAI_Radar_Brief.pdf): a two-page brief, plain version first, technical version second.
