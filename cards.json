@@ -1,6 +1,62 @@
 {
-  "updated": null,
-  "feeds_failed": [],
-  "cards": [],
-  "seen": []
+  "updated": "2026-11-24T17:46:28.354Z",
+  "feeds_failed": [
+    "Microsoft 365"
+  ],
+  "cards": [
+    {
+      "url": "https://blog.google/products-and-platforms/products/search/google-search-personal-intelligence-apps/",
+      "title": "Google Search that uses your own Drive and Wallet",
+      "what": "Lets you opt in to connect Google Wallet, Drive and the Gemini app so AI Mode answers in Search can use your personal information.",
+      "audiences": [
+        "Sales"
+      ],
+      "try_for": "Opt in, then ask AI Mode to summarise your visit notes for a bar account before your next call.",
+      "verdict": "Watch",
+      "why": "The announcement does not say who can use it or where, so it is not clear it is available to staff yet.",
+      "catch": "Connecting personal accounts means Search answers draw on your files, and the text gives no detail on how this is limited.",
+      "data_caution": "Do not connect accounts or Drive folders holding confidential pricing, contracts or customer data without IT or legal approval.",
+      "source": "Google",
+      "date": "2026-11-23T17:00:00.000Z",
+      "original_title": "A more tailored Google Search that’s uniquely yours",
+      "graded_at": "2026-11-24T17:46:28.021Z",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "url": "https://blog.google/innovation-and-ai/products/gemini-app/gemini-lower-memory-devices/",
+      "title": "Gemini app now runs on lower-memory Android phones",
+      "what": "The Gemini app now works on older or lower-memory Android phones, including Gemini Live and custom image creation.",
+      "audiences": [
+        "Brand & marketing"
+      ],
+      "try_for": "Create a rough image concept for a social post idea on your Android phone using the Gemini app's custom image feature.",
+      "verdict": "Try now",
+      "why": "The text says the app is available today on these phones, and image concepts are a task marketing staff already do.",
+      "catch": "The announcement does not say which phone models qualify or whether any features cost extra, so check your device first.",
+      "data_caution": "Do not enter unreleased product names, recipes, pricing, or consumer research data into the app.",
+      "source": "Google",
+      "date": "2026-11-18T17:00:00.000Z",
+      "original_title": "The Gemini app is now available on lower-memory Android devices.",
+      "graded_at": "2026-11-24T17:46:28.021Z",
+      "model": "claude-haiku-5-5"
+    }
+  ],
+  "seen": [
+    "https://openai.com/index/introducing-shirudo",
+    "https://openai.com/business/learn/connected-intelligence-for-in-house-legal",
+    "https://openai.com/business/customer-stories/richpanel-ai-customer-support",
+    "https://openai.com/index/perplexity-and-intelligence",
+    "https://openai.com/index/combatting-adversarial-distillation",
+    "https://blog.google/products-and-platforms/products/gemini/gemini-golden-state/",
+    "https://blog.google/innovation-and-ai/technology/developers-tools/gemini-api-tool-retrieval/",
+    "https://blog.google/innovation-and-ai/technology/ai/dialogues-walter-isaacson/",
+    "https://www.theverge.com/entertainment/1041362/tidal-ai-music-ban",
+    "https://www.theverge.com/tech/1041222/jensen-huang-nvidia-scandal-deepfakes",
+    "https://www.theverge.com/ai-artificial-intelligence/1041227/the-new-york-times-warns-photographers-not-to-update-photoshop-over-ai-features",
+    "https://www.theverge.com/ai-artificial-intelligence/1040652/jensen-huang-nvidia-trump-reinstated",
+    "https://www.theverge.com/ai-artificial-intelligence/1030422/nvidia-jensen-huang-ai-china-alice-huang",
+    "https://zapier.com/blog/zapier-automation-examples",
+    "https://zapier.com/blog/workflow-automation",
+    "https://zapier.com/blog/ai-models-on-zapier"
+  ]
 }
