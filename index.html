@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GenAI Radar</title>
+<meta name="description" content="New AI tools, graded each morning for five kinds of staff at a brewer. An independent project.">
+<style>
+:root {
+  --bg: #f6f4ef; --card: #ffffff; --ink: #1c1b19; --muted: #625f58; --line: #dedad0;
+  --accent: #b4441f; --try: #1f6b45; --watch: #8a6100; --skip: #6b6861; --tested-bg: #fff3d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #161513; --card: #201f1c; --ink: #f1eee6; --muted: #a9a59b; --line: #36342f;
+    --accent: #f08a5d; --try: #6fd19f; --watch: #e6b84a; --skip: #a9a59b; --tested-bg: #3a2f12; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.4px; }
+.lede { color: var(--muted); margin: 0 0 6px; max-width: 60ch; }
+.meta { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+.filters button { font: inherit; font-size: 14px; padding: 7px 12px; min-height: 36px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--card); color: var(--ink); cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.filters button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 18px; margin: 0 0 14px; }
+.card h2 { font-size: 19px; line-height: 1.25; margin: 0 0 6px; }
+.card h2 a { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; font-size: 13px; }
+.label { padding: 2px 8px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); }
+.label.tested { background: var(--tested-bg); color: var(--ink); border-color: transparent; font-weight: 600; }
+.verdict { font-weight: 700; }
+.verdict.try { color: var(--try); } .verdict.watch { color: var(--watch); } .verdict.skip { color: var(--skip); }
+.src { color: var(--muted); }
+dl { margin: 10px 0 0; display: grid; grid-template-columns: 110px 1fr; gap: 6px 12px; font-size: 15px; }
+dt { color: var(--muted); } dd { margin: 0; }
+.mine { margin-top: 12px; padding: 12px; background: var(--tested-bg); border-radius: 6px; font-size: 15px; }
+.mine b { display: block; margin-bottom: 4px; }
+.empty { color: var(--muted); padding: 24px 0; }
+details { margin-top: 36px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 15px; }
+details summary { cursor: pointer; color: var(--ink); font-weight: 600; }
+details li { margin-bottom: 6px; }
+footer { margin-top: 28px; color: var(--muted); font-size: 13px; }
+@media (max-width: 520px) { dl { grid-template-columns: 1fr; gap: 0; } dt { margin-top: 8px; font-size: 13px; } h1 { font-size: 25px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>GenAI Radar</h1>
+  <p class="lede">New AI tools, graded each morning for five kinds of staff at a brewer: who would use it, what to try, and what to watch out for.</p>
+  <p class="meta" id="meta">Loading…</p>
+
+  <div class="filters" id="filters" role="group" aria-label="Filter cards"></div>
+  <div id="cards" aria-live="polite"></div>
+
+  <details>
+    <summary>How this works, and where it is weak</summary>
+    <ol>
+      <li>Each morning an n8n workflow reads a few announcement feeds and skips anything it has already seen.</li>
+      <li>Claude fills in the same form for every item: what it does, who it is for, one task to try, a verdict and a catch.</li>
+      <li>The card is saved and this page shows it.</li>
+    </ol>
+    <p><b>Two labels.</b> “Auto-graded” means Claude read an announcement. Nobody used the tool. “Tested by me” means I tried it and wrote the notes myself.</p>
+    <ul>
+      <li>Auto-graded cards can overrate a tool, because announcements are written to impress.</li>
+      <li>The feeds are a small sample, not the whole market. A feed that failed, or had nothing new this week, is named at the top.</li>
+      <li>Nothing here is advice on what data is safe to share. Follow your own company’s policy.</li>
+    </ul>
+  </details>
+
+  <footer>An independent project by Brendan Teo. Not affiliated with any company. Built with n8n and Claude.</footer>
+</main>
+
+<script>
+const AUDIENCES = ["Brand & marketing", "Sales", "Supply chain & brewery", "Finance", "Internal comms & HR"];
+const state = { audience: "All", testedOnly: false, cards: [] };
+
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;   // textContent only: card text comes from feeds and a model
+  return n;
+};
+const safeUrl = (u) => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch { return null; } };
+const day = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" }); };
+
+function renderFilters() {
+  const box = document.getElementById("filters");
+  box.replaceChildren();
+  for (const a of ["All", ...AUDIENCES]) {
+    const b = el("button", null, a);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(state.audience === a));
+    b.onclick = () => { state.audience = a; render(); };
+    box.append(b);
+  }
+  const t = el("button", null, "Tested by me");
+  t.type = "button";
+  t.setAttribute("aria-pressed", String(state.testedOnly));
+  t.onclick = () => { state.testedOnly = !state.testedOnly; render(); };
+  box.append(t);
+}
+
+function cardNode(c) {
+  const art = el("article", "card");
+  const row = el("div", "row");
+  const v = (c.test && c.test.verdict) || c.verdict || "Watch";
+  row.append(el("span", "verdict " + v.split(" ")[0].toLowerCase(), v));
+  row.append(el("span", "label" + (c.test ? " tested" : ""), c.test ? "Tested by me" : "Auto-graded"));
+  row.append(el("span", "src", [c.source, day(c.date)].filter(Boolean).join(" · ")));
+  art.append(row);
+
+  const h = el("h2");
+  const href = safeUrl(c.url);
+  if (href) { const a = el("a", null, c.title); a.href = href; a.rel = "noopener noreferrer"; a.target = "_blank"; h.append(a); }
+  else h.textContent = c.title;
+  art.append(h);
+  art.append(el("p", null, c.what));
+
+  const dl = el("dl");
+  const add = (k, val) => { if (val) { dl.append(el("dt", null, k), el("dd", null, val)); } };
+  add("Best for", (c.audiences || []).join(", "));
+  add("Try it for", c.try_for);
+  add("Why", c.why);
+  add("Catch", c.catch);
+  add("Data caution", c.data_caution);
+  art.append(dl);
+
+  if (c.test) {
+    const m = el("div", "mine");
+    m.append(el("b", null, "What I found" + (c.test.minutes ? " (" + c.test.minutes + " min test, " + day(c.test.tested_on) + ")" : "")));
+    for (const k of ["tried", "worked", "went_wrong"]) if (c.test[k]) m.append(el("div", null, c.test[k]));
+    art.append(m);
+  }
+  return art;
+}
+
+function render() {
+  renderFilters();
+  const box = document.getElementById("cards");
+  const list = state.cards.filter(c =>
+    (state.audience === "All" || (c.audiences || []).includes(state.audience)) && (!state.testedOnly || c.test));
+  box.replaceChildren(...(list.length ? list.map(cardNode) : [el("p", "empty", "No cards match this filter yet.")]));
+}
+
+async function load() {
+  const meta = document.getElementById("meta");
+  try {
+    const [cardsRes, testedRes] = await Promise.all([fetch("cards.json", { cache: "no-store" }), fetch("tested.json", { cache: "no-store" })]);
+    if (!cardsRes.ok) throw new Error("cards.json returned " + cardsRes.status);
+    const data = await cardsRes.json();
+    const tests = testedRes.ok ? ((await testedRes.json()).tests || {}) : {};
+    state.cards = (data.cards || []).map(c => ({ ...c, test: tests[c.url] || null }))
+      .sort((a, b) => (b.test ? 1 : 0) - (a.test ? 1 : 0) || String(b.date).localeCompare(String(a.date)));
+    const tested = state.cards.filter(c => c.test).length;
+    let line = state.cards.length + " cards · " + tested + " tested by me";
+    if (data.updated) line += " · updated " + day(data.updated);
+    if ((data.feeds_failed || []).length) line += " · nothing new this week from: " + data.feeds_failed.join(", ");
+    meta.textContent = line;
+    render();
+  } catch (e) {
+    meta.textContent = "Could not load the cards (" + e.message + "). Reload the page to try again.";
+  }
+}
+load();
+</script>
+</body>
+</html>

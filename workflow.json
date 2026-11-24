@@ -1,0 +1,531 @@
+{
+  "name": "GenAI Radar",
+  "nodes": [
+    {
+      "id": "radar-1",
+      "name": "Every morning",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "radar-2",
+      "name": "Feeds",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// The sources the radar reads each morning. Add or remove a line to change them.\n// Checked 2026-11-24. Product Hunt was dropped: its feed carries no description to grade.\n// TechCrunch was dropped: it refuses automated feed readers (403), and the radar does not work around a block. Anthropic publishes no RSS feed, so Claude news goes in through the form.\nreturn [\n  { url: 'https://openai.com/news/rss.xml' },\n  { url: 'https://blog.google/technology/ai/rss/' },\n  { url: 'https://www.microsoft.com/en-us/microsoft-365/blog/feed/' },\n  { url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml' }, // covers Anthropic, Microsoft and others\n  { url: 'https://www.zapier.com/blog/feeds/latest/' },                       // automation tools for non-engineers\n].map(json => ({ json }));\n"
+      }
+    },
+    {
+      "id": "radar-3",
+      "name": "Read feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "radar-4",
+      "name": "Keep recent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Keep only fresh items: at most 7 days old, and the 5 newest per source.\n// Also note which feeds gave nothing fresh (failed, or just quiet this week), so the page can say so.\nconst SOURCES = { 'openai.com': 'OpenAI', 'blog.google': 'Google', 'microsoft.com': 'Microsoft 365', 'theverge.com': 'The Verge', 'zapier.com': 'Zapier' };\nconst MAX_AGE_DAYS = 7, PER_SOURCE = 5;\n// n8n's code box has no URL class, so the host is read with a pattern.\nconst sourceOf = (link) => {\n  const m = /^https?:\\/\\/([^\\/?#:@]+)/i.exec(String(link));\n  if (!m) return null;\n  const h = m[1].toLowerCase().replace(/^www\\./, '');\n  return SOURCES[h] || SOURCES[h.split('.').slice(-2).join('.')] || h;\n};\nconst strip = (s) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim();\n\nconst now = Date.now(), bySource = {};\nfor (const { json: it } of $input.all()) {\n  const source = it.link && sourceOf(it.link);\n  if (!source || !it.title) continue;                       // a failed feed gives an item with no link\n  const t = Date.parse(it.isoDate || it.pubDate || '');\n  if (isNaN(t) || now - t > MAX_AGE_DAYS * 864e5 || t - now > 2 * 864e5) continue;   // too old, or a wrong date far in the future\n  (bySource[source] ||= []).push({\n    title: strip(it.title).slice(0, 200), link: it.link,\n    snippet: strip(it.contentSnippet || it.content || it.summary).slice(0, 1500),\n    date: new Date(t).toISOString(), source,\n  });\n}\nconst feeds_failed = Object.values(SOURCES).filter(s => !bySource[s]);\nreturn Object.values(bySource)\n  .flatMap(list => list.sort((a, b) => b.date.localeCompare(a.date)).slice(0, PER_SOURCE))\n  .map(json => ({ json: { ...json, feeds_failed } }));\n"
+      }
+    },
+    {
+      "id": "radar-5",
+      "name": "Get seen list",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "brendanteo269"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "genai-radar"
+        },
+        "filePath": "cards.json",
+        "operation": "get",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "radar-6",
+      "name": "Skip seen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Drop items the radar has already dealt with: links that already have a card,\n// and links Claude already judged not relevant. The list lives in cards.json,\n// so an item is only marked seen after it was graded successfully.\nconst saved = JSON.parse(Buffer.from($input.first().json.content, 'base64').toString('utf8'));\nconst seen = new Set([...(saved.cards || []).map(c => c.url), ...(saved.seen || [])]);\nreturn $('Keep recent').all().filter(i => !seen.has(i.json.link)).map(i => ({ json: i.json }));\n"
+      }
+    },
+    {
+      "id": "radar-7",
+      "name": "Grade one tool",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        400
+      ],
+      "parameters": {
+        "authentication": "none",
+        "formTitle": "Grade one AI tool",
+        "formDescription": "Paste a link to a new AI tool or feature. A card appears on the radar in about a minute.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Tool link",
+              "fieldName": "link",
+              "fieldType": "text",
+              "placeholder": "https://",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Announcement text (optional)",
+              "fieldName": "pasted",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "path": "grade",
+          "buttonLabel": "Grade it"
+        }
+      },
+      "webhookId": "radar-grade-form"
+    },
+    {
+      "id": "radar-8",
+      "name": "Check link",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        400
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// The form accepts any text. Only fetch real public web links.\n// n8n's code box has no URL class, so the link is checked with a pattern.\nconst form = $input.first().json;\nconst link = String(form.link || form['Tool link'] || '').trim();\nconst m = /^https?:\\/\\/([^\\/?#:@\\s]+)(:\\d+)?([\\/?#]\\S*)?$/i.exec(link);\nif (!m) throw new Error('That is not a link. Paste the full address, starting with https://');\nconst host = m[1].toLowerCase();\nconst isPrivate = host === 'localhost' || !host.includes('.') || host.endsWith('.local') || host.endsWith('.internal') ||\n  /^(127\\.|10\\.|192\\.168\\.|169\\.254\\.|172\\.(1[6-9]|2\\d|3[01])\\.|0\\.)/.test(host) || host.includes('[');\nif (isPrivate) throw new Error('Only public web links can be graded.');\nreturn [{ json: { link, host, pasted: String(form.pasted || form['Announcement text (optional)'] || '').slice(0, 3000) } }];\n"
+      }
+    },
+    {
+      "id": "radar-9",
+      "name": "Fetch page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.link }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (genai-radar)"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "radar-10",
+      "name": "Shape submission",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        400
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Turn the fetched page into the same shape a feed item has.\nconst src = $('Check link').first().json;\nconst html = String($input.first().json.data || '');\nconst titleMatch = html.match(/<title[^>]*>([^<]*)<\\/title>/i);\nconst text = html.replace(/<(script|style|noscript)[\\s\\S]*?<\\/\\1>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\\s+/g, ' ').trim();\nconst snippet = (src.pasted ? src.pasted + ' ' : '') + text.slice(0, 3000);\nif (snippet.trim().length < 80) throw new Error('Could not read that page. Paste the announcement text into the second box and try again.');\nreturn [{ json: {\n  title: (titleMatch ? titleMatch[1].trim() : src.host).slice(0, 200),\n  link: src.link, snippet: snippet.slice(0, 3500), date: new Date().toISOString(), source: 'Submitted', feeds_failed: [],\n} }];\n"
+      }
+    },
+    {
+      "id": "radar-11",
+      "name": "Build request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Build the message sent to Claude. The grading rules are the same for every item.\nconst SYSTEM = \"You grade new generative-AI tools and features for staff at a large beer and beverage company. Your reader is a busy employee who is not an engineer.\\n\\nYou are given one item: a title, a link and a short description taken from an announcement. You have NOT used the tool. Judge only from the text given. Never invent features, prices or results that the text does not state.\\n\\nAudiences (use these exact names):\\n- \\\"Brand & marketing\\\": campaign copy, visuals, social posts, consumer research\\n- \\\"Sales\\\": reps who serve bars, restaurants and retailers; visit prep, order follow-up, account notes\\n- \\\"Supply chain & brewery\\\": planning, maintenance logs, quality reports, logistics\\n- \\\"Finance\\\": reports, standards look-up, reconciliations\\n- \\\"Internal comms & HR\\\": announcements, training material, events\\n\\nFirst decide if the item is relevant. It is relevant only if it is a tool, product feature or workflow that an employee in one of these audiences could try themselves within a month. Research papers, funding news, policy statements, hiring news, developer-only infrastructure and opinion pieces are NOT relevant.\\n\\nReply with one JSON object and nothing else. No markdown, no code fence.\\n\\nIf not relevant:\\n{\\\"relevant\\\": false, \\\"reason\\\": \\\"<under 15 words>\\\"}\\n\\nIf relevant:\\n{\\n  \\\"relevant\\\": true,\\n  \\\"title\\\": \\\"<what it is, under 10 words, plain words, no hype>\\\",\\n  \\\"what\\\": \\\"<one sentence: what it does>\\\",\\n  \\\"audiences\\\": [\\\"<1 to 3 audience names from the list>\\\"],\\n  \\\"try_for\\\": \\\"<one concrete task for the first audience, starting with a verb, under 25 words>\\\",\\n  \\\"verdict\\\": \\\"<exactly one of: Try now | Watch | Skip>\\\",\\n  \\\"why\\\": \\\"<one sentence giving the reason for the verdict>\\\",\\n  \\\"catch\\\": \\\"<the main limit or risk, one sentence>\\\",\\n  \\\"data_caution\\\": \\\"<one sentence on what company data not to put in, or 'None beyond normal care.'>\\\"\\n}\\n\\nVerdict rules:\\n- \\\"Try now\\\": available today to ordinary users, and the task in try_for is something these staff already do.\\n- \\\"Watch\\\": promising but not generally available yet, costly, or unproven.\\n- \\\"Skip\\\": relevant in theory but not worth an employee's time now.\\nWhen the text is too thin to tell, choose \\\"Watch\\\" and say so in \\\"why\\\".\\n\\nStyle: short sentences, plain words. No words like \\\"revolutionary\\\", \\\"seamless\\\", \\\"powerful\\\", \\\"game-changing\\\". Write for someone who has ten seconds.\";\nconst MODEL = 'claude-haiku-5-5';\nreturn $input.all().map(({ json }) => ({ json: { ...json, model: MODEL, body: {\n  model: MODEL, max_tokens: 700, system: SYSTEM,\n  messages: [{ role: 'user', content:\n    'Title: ' + json.title + '\\nLink: ' + json.link + '\\nSource: ' + json.source + '\\nDescription: ' + (json.snippet || '(none given)') }],\n} } }));\n"
+      }
+    },
+    {
+      "id": "radar-12",
+      "name": "Grade with Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 60000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 500
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "radar-13",
+      "name": "Make cards",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Read Claude's answers. Keep only well-formed, relevant cards; count the rest.\nconst AUDIENCES = ['Brand & marketing', 'Sales', 'Supply chain & brewery', 'Finance', 'Internal comms & HR'];\nconst VERDICTS = ['Try now', 'Watch', 'Skip'];\nconst asked = $('Build request').all();\nconst answers = $input.all();\nconst newCards = [], notRelevantLinks = []; let malformed = 0;\n\nanswers.forEach(({ json: res }, i) => {\n  const src = asked[i].json;\n  let a;\n  try {\n    const text = res.content.find(b => b.type === 'text').text;\n    a = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));\n  } catch { malformed++; return; }                          // API error or a reply that is not JSON\n  if (a.relevant !== true) { notRelevantLinks.push(src.link); return; }\n  const audiences = (Array.isArray(a.audiences) ? a.audiences : []).filter(x => AUDIENCES.includes(x)).slice(0, 3);\n  const text = (v, n) => typeof v === 'string' && v.trim() ? v.trim().slice(0, n) : null;\n  const card = {\n    url: src.link, title: text(a.title, 120), what: text(a.what, 300), audiences,\n    try_for: text(a.try_for, 250), verdict: a.verdict, why: text(a.why, 300),\n    catch: text(a.catch, 300), data_caution: text(a.data_caution, 300),\n    source: src.source, date: src.date, original_title: src.title,\n    graded_at: new Date().toISOString(), model: src.model,\n  };\n  const complete = card.title && card.what && card.try_for && card.catch && audiences.length && VERDICTS.includes(card.verdict);\n  if (!complete) { malformed++; return; }\n  newCards.push(card);\n});\n// Unreadable answers are not marked seen, so they are tried again on the next run.\nreturn [{ json: { newCards, notRelevantLinks, notRelevant: notRelevantLinks.length, malformed, feeds_failed: asked[0] ? asked[0].json.feeds_failed : [], fromForm: asked[0] && asked[0].json.source === 'Submitted' } }];\n"
+      }
+    },
+    {
+      "id": "radar-14",
+      "name": "Get saved cards",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2160,
+        200
+      ],
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "brendanteo269"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "genai-radar"
+        },
+        "filePath": "cards.json",
+        "operation": "get",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      }
+    },
+    {
+      "id": "radar-15",
+      "name": "Merge cards",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Add today's cards to the saved list. A card for a link we already have replaces the old one.\nconst run = $('Make cards').first().json;\nconst file = $input.first().json;\nconst old = JSON.parse(Buffer.from(file.content, 'base64').toString('utf8'));\nconst fresh = new Set(run.newCards.map(c => c.url));\nconst cards = [...run.newCards, ...(old.cards || []).filter(c => !fresh.has(c.url))]\n  .sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 300);\nconst seen = [...new Set([...(old.seen || []), ...run.notRelevantLinks])].slice(-1000);   // links judged not relevant\nconst out = {\n  updated: new Date().toISOString(),\n  feeds_failed: run.fromForm ? (old.feeds_failed || []) : run.feeds_failed,   // a form run reads no feeds\n  cards, seen,\n};\nreturn [{ json: {\n  content: JSON.stringify(out, null, 2) + '\\n', added: run.newCards.length, total: cards.length,\n  message: `Radar: +${run.newCards.length} card(s), ${run.notRelevant} not relevant, ${run.malformed} unreadable`,\n} }];\n"
+      }
+    },
+    {
+      "id": "radar-16",
+      "name": "Save cards",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2640,
+        200
+      ],
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "brendanteo269"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "genai-radar"
+        },
+        "filePath": "cards.json",
+        "operation": "edit",
+        "binaryData": false,
+        "fileContent": "={{ $json.content }}",
+        "commitMessage": "={{ $json.message }}",
+        "additionalParameters": {}
+      }
+    }
+  ],
+  "connections": {
+    "Every morning": {
+      "main": [
+        [
+          {
+            "node": "Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feeds": {
+      "main": [
+        [
+          {
+            "node": "Read feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read feed": {
+      "main": [
+        [
+          {
+            "node": "Keep recent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keep recent": {
+      "main": [
+        [
+          {
+            "node": "Get seen list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get seen list": {
+      "main": [
+        [
+          {
+            "node": "Skip seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip seen": {
+      "main": [
+        [
+          {
+            "node": "Build request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grade one tool": {
+      "main": [
+        [
+          {
+            "node": "Check link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check link": {
+      "main": [
+        [
+          {
+            "node": "Fetch page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch page": {
+      "main": [
+        [
+          {
+            "node": "Shape submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape submission": {
+      "main": [
+        [
+          {
+            "node": "Build request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build request": {
+      "main": [
+        [
+          {
+            "node": "Grade with Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grade with Claude": {
+      "main": [
+        [
+          {
+            "node": "Make cards",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make cards": {
+      "main": [
+        [
+          {
+            "node": "Get saved cards",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get saved cards": {
+      "main": [
+        [
+          {
+            "node": "Merge cards",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge cards": {
+      "main": [
+        [
+          {
+            "node": "Save cards",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Singapore"
+  },
+  "active": false
+}

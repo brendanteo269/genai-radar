@@ -1,0 +1,14 @@
+{
+  "_how_to_use": "Add one entry per tool you tested yourself. The key is the card's link, copied exactly from cards.json. The page then shows that card as 'Tested by me' with your notes.",
+  "_example": {
+    "https://example.com/some-tool": {
+      "tested_on": "2026-11-24",
+      "minutes": 25,
+      "tried": "What you actually did, in one or two sentences.",
+      "worked": "What worked.",
+      "went_wrong": "What went wrong or surprised you.",
+      "verdict": "Try now"
+    }
+  },
+  "tests": {}
+}
