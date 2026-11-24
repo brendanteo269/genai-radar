@@ -31,7 +31,7 @@ if (isMain) {
   assert.equal(kept[0].title, 'OpenAI 0', 'newest first');
   assert.deepEqual(kept.filter(k => k.source === 'Google').map(k => k.title), ['Fresh Google'], 'drops items older than 7 days or dated far in the future');
   assert.equal(kept.find(k => k.source === 'Microsoft 365').source, 'Microsoft 365', 'www. host maps to its source');
-  assert.deepEqual(kept[0].feeds_failed, ['The Verge', 'Zapier'], 'names the feeds that returned nothing fresh');
+  assert.deepEqual(kept[0].feeds_failed, ['The Verge', 'Zapier', 'Google Workspace'], 'names the feeds that returned nothing fresh');
   assert.equal(kept[0].snippet, 'hi there', 'strips HTML');
 
   // Check link: public links pass; private, malformed and credential-carrying links are refused.

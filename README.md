@@ -16,7 +16,7 @@ every morning                         on demand
      [Get saved cards] -> [Merge cards] -> [Save cards]
 ```
 
-- **Feeds** (`nodes/feeds.js`): OpenAI, Google, Microsoft 365, The Verge AI, Zapier.
+- **Feeds** (`nodes/feeds.js`): OpenAI, Google, Microsoft 365, The Verge AI, Zapier, Google Workspace updates.
 - **Keep recent**: at most 7 days old, 5 newest per source.
 - **Skip seen**: skips links that already have a card or were judged not relevant. The list lives in `cards.json`, so a failed grading is retried next run.
 - **Grade with Claude**: `prompt.md`, model `claude-haiku-5-5`. The reply must be JSON with a fixed set of fields.

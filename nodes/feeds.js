@@ -7,4 +7,6 @@ return [
   { url: 'https://www.microsoft.com/en-us/microsoft-365/blog/feed/' },
   { url: 'https://www.theverge.com/rss/ai-artificial-intelligence/index.xml' }, // covers Anthropic, Microsoft and others
   { url: 'https://www.zapier.com/blog/feeds/latest/' },                       // automation tools for non-engineers
+  // Added 2026-11-25: product release notes. The first run showed news feeds are mostly not tools (16 of 20 rejected).
+  { url: 'https://workspaceupdates.googleblog.com/feeds/posts/default' },
 ].map(json => ({ json }));

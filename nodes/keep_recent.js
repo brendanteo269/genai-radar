@@ -1,6 +1,6 @@
 // Keep only fresh items: at most 7 days old, and the 5 newest per source.
 // Also note which feeds gave nothing fresh (failed, or just quiet this week), so the page can say so.
-const SOURCES = { 'openai.com': 'OpenAI', 'blog.google': 'Google', 'microsoft.com': 'Microsoft 365', 'theverge.com': 'The Verge', 'zapier.com': 'Zapier' };
+const SOURCES = { 'openai.com': 'OpenAI', 'blog.google': 'Google', 'microsoft.com': 'Microsoft 365', 'theverge.com': 'The Verge', 'zapier.com': 'Zapier', 'googleblog.com': 'Google Workspace' };
 const MAX_AGE_DAYS = 7, PER_SOURCE = 5;
 // n8n's code box has no URL class, so the host is read with a pattern.
 const sourceOf = (link) => {
