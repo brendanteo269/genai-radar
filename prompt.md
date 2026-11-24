@@ -23,6 +23,7 @@ If relevant:
   "what": "<one sentence: what it does>",
   "audiences": ["<1 to 3 audience names from the list>"],
   "try_for": "<one concrete task for the first audience, starting with a verb, under 25 words>",
+  "impact": <1, 2 or 3: how big the change is for these staff>,
   "verdict": "<exactly one of: Try now | Watch | Skip>",
   "why": "<one sentence giving the reason for the verdict>",
   "catch": "<the main limit or risk, one sentence>",
@@ -34,5 +35,10 @@ Verdict rules:
 - "Watch": promising but not generally available yet, costly, or unproven.
 - "Skip": relevant in theory but not worth an employee's time now.
 When the text is too thin to tell, choose "Watch" and say so in "why".
+
+Impact rules (size of the change, separate from the verdict):
+- 1: a small tweak to something that already exists, such as wider availability or a new setting.
+- 2: a new feature that changes how one task is done.
+- 3: a new tool or capability that changes how a whole job is done. Rare. When unsure, choose the lower number.
 
 Style: short sentences, plain words. No words like "revolutionary", "seamless", "powerful", "game-changing". Write for someone who has ten seconds.

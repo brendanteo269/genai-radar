@@ -42,7 +42,7 @@ if (isMain) {
 
   // Make cards: only complete, relevant answers become cards. Nothing bad passes silently.
   const asked = ['a', 'b', 'c', 'd', 'e'].map(k => ({ link: `https://x.com/${k}`, title: k, source: 'OpenAI', date: iso(0), model: 'm', feeds_failed: [] }));
-  const good = { relevant: true, title: 'T', what: 'W', audiences: ['Sales', 'Made up'], try_for: 'Do it', verdict: 'Try now', why: 'Y', catch: 'C', data_caution: 'D' };
+  const good = { relevant: true, impact: 3, title: 'T', what: 'W', audiences: ['Sales', 'Made up'], try_for: 'Do it', verdict: 'Try now', why: 'Y', catch: 'C', data_caution: 'D' };
   const reply = (text) => ({ content: [{ type: 'text', text }] });
   const [made] = runBox('make_cards', [
     reply(JSON.stringify(good)),
@@ -53,6 +53,7 @@ if (isMain) {
   ], { 'Build request': asked });
   assert.deepEqual(made.newCards.map(c => c.url), ['https://x.com/a', 'https://x.com/b'], 'plain and fenced JSON both parse');
   assert.deepEqual(made.newCards[0].audiences, ['Sales'], 'unknown audience names are dropped');
+  assert.equal(made.newCards[0].impact, 3, 'keeps the size-of-change score');
   assert.equal(made.notRelevant, 1);
   assert.equal(made.malformed, 2, 'a bad verdict and an API error are counted, not saved');
 

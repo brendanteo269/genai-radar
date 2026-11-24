@@ -17,7 +17,7 @@ answers.forEach(({ json: res }, i) => {
   const text = (v, n) => typeof v === 'string' && v.trim() ? v.trim().slice(0, n) : null;
   const card = {
     url: src.link, title: text(a.title, 120), what: text(a.what, 300), audiences,
-    try_for: text(a.try_for, 250), verdict: a.verdict, why: text(a.why, 300),
+    try_for: text(a.try_for, 250), verdict: a.verdict, impact: [1, 2, 3].includes(a.impact) ? a.impact : 1, why: text(a.why, 300),
     catch: text(a.catch, 300), data_caution: text(a.data_caution, 300),
     source: src.source, date: src.date, original_title: src.title,
     graded_at: new Date().toISOString(), model: src.model,

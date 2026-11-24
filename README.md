@@ -1,56 +1,45 @@
 # GenAI Radar
 
-New AI tools, graded each morning for five kinds of staff at a brewer. An n8n workflow reads announcement feeds, Claude fills in the same card for each item, and a static page shows the cards. An independent project.
+New AI tools come out every week. Most staff have no time to work out which ones matter for their job. The radar reads the announcements each morning and turns each real tool into one short card.
+
+An independent project by Brendan Teo, built with HEINEKEN's Global GenAI Lab in mind. Not affiliated with HEINEKEN.
+
+## What a card tells you
+
+- What the tool does, in one sentence
+- Who it is for: Brand & marketing, Sales, Supply chain & brewery, Finance, or Internal comms & HR
+- One task to try with it
+- A verdict: Try now, Watch, or Skip
+- The catch, and what company data not to put in
+
+## Two kinds of card
+
+- **Auto-graded.** Claude read the announcement. Nobody used the tool.
+- **Tested.** I tried the tool myself and wrote what worked and what went wrong.
+
+The page keeps these apart on purpose. An announcement is written to impress, so a card based only on it can overrate a tool.
 
 ## How it works
 
-```
-every morning                         on demand
-[Every morning]                       [Grade one tool]  (form)
-[Feeds] -> [Read feed]                [Check link] -> [Fetch page]
-[Keep recent]                         [Shape submission]
-[Get seen list] -> [Skip seen]              |
-            \______________________________/
-                          |
-     [Build request] -> [Grade with Claude] -> [Make cards]
-     [Get saved cards] -> [Merge cards] -> [Save cards]
-```
+1. Every morning, an n8n workflow reads six announcement feeds.
+2. It skips anything it has already seen.
+3. Claude grades each new item against the same rules. Most items are news, not tools, and are dropped.
+4. The cards are saved and the page updates.
 
-- **Feeds** (`nodes/feeds.js`): OpenAI, Google, Microsoft 365, The Verge AI, Zapier, Google Workspace updates.
-- **Keep recent**: at most 7 days old, 5 newest per source.
-- **Skip seen**: skips links that already have a card or were judged not relevant. The list lives in `cards.json`, so a failed grading is retried next run.
-- **Grade with Claude**: `prompt.md`, model `claude-haiku-5-5`. The reply must be JSON with a fixed set of fields.
-- **Make cards**: drops replies that are not relevant, not JSON, or missing a field. Nothing incomplete is saved.
-- **Save cards**: commits `cards.json` to GitHub; the page redeploys.
-- **Tested by me**: add your own notes to `tested.json`, keyed by the card's link. The page shows those cards first.
+You can also paste a link into a form to grade one tool on demand.
 
-## Files
+## What the page shows
 
-| File | What it is |
-|---|---|
-| `workflow.json` | Import this into n8n. Built by `build.mjs`; do not edit by hand |
-| `nodes/*.js` | The code inside each n8n code box |
-| `prompt.md` | The grading rules sent to Claude |
-| `index.html` | The page. One file, no framework |
-| `cards.json` | Written by the workflow |
-| `tested.json` | Written by you |
-| `check.mjs` | Self-check for the code boxes: `node check.mjs` |
+- Left: pick a source or an audience.
+- Top: how many cards are new this week, how many are worth trying now, and how many I tested.
+- Below: the cards. A bigger change gets a bigger card. Click one for the detail.
 
-## Setup
+## Where it is weak
 
-1. `npx n8n` in this folder, then open http://localhost:5678 and create the local owner account.
-2. Open the **GenAI Radar** workflow (import `workflow.json` if it is not listed).
-3. On **Grade with Claude**, add an Anthropic credential (your API key).
-4. On **Get seen list**, **Get saved cards** and **Save cards**, add a GitHub credential: a fine-grained token limited to this repo with Contents read and write.
-5. Press **Execute workflow** once and check the cards.
-6. Publish the workflow so the daily timer and the form are live. The form is at http://localhost:5678/form/grade.
+- It runs on a laptop, so it stops when the laptop is off.
+- Six feeds are a sample, not the whole market.
+- It is not advice on what data is safe to share. Follow your company's policy.
 
-After changing `prompt.md` or anything in `nodes/`: `node check.mjs && node build.mjs`, then re-import `workflow.json`.
+## More
 
-## Known limits
-
-- n8n runs on a laptop, so nothing updates while it is off.
-- Auto-graded cards come from announcement text. Nobody used the tool.
-- n8n's code box has no `URL` class; links are checked with a pattern (`nodes/check_link.js`).
-- TechCrunch and Product Hunt were dropped: one refuses automated readers, the other has no description to grade.
-- The form fetches whatever public link it is given. Keep it on the laptop; do not expose it to the internet as is.
+- [TECHNICAL.md](TECHNICAL.md): how it is built and how to run it.
