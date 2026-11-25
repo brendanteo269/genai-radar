@@ -18,7 +18,7 @@ Every card is auto-graded: Claude read the announcement, and nobody used the too
 
 ## How it works
 
-1. Every morning, an n8n workflow reads six announcement feeds.
+1. Every morning, an n8n workflow reads twelve announcement feeds: the big AI labs (OpenAI, Google, Meta, Mistral), the suppliers HEINEKEN is publicly reported to use (Microsoft, including Copilot Studio, and SAP), plus Salesforce, Zapier, Google Workspace and The Verge.
 2. It skips anything it has already seen.
 3. Claude grades each new item against the same rules. Most items are news, not tools, and are dropped.
 4. The cards are saved and the page updates.
@@ -34,7 +34,7 @@ You can also paste a link into a form to grade one tool on demand.
 ## Where it is weak
 
 - It runs on a laptop, so it stops when the laptop is off.
-- Six feeds are a sample, not the whole market.
+- Twelve feeds are a sample, not the whole market. Anthropic, Perplexity, Canva, Adobe and IBM publish no feed the radar can read; their news only arrives through The Verge or the form.
 - It is not advice on what data is safe to share. Follow your company's policy.
 
 ## More

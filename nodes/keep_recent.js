@@ -1,13 +1,21 @@
 // Keep only fresh items: at most 7 days old, and the 5 newest per source.
 // Also note which feeds gave nothing fresh (failed, or just quiet this week), so the page can say so.
-const SOURCES = { 'openai.com': 'OpenAI', 'blog.google': 'Google', 'microsoft.com': 'Microsoft 365', 'theverge.com': 'The Verge', 'zapier.com': 'Zapier', 'googleblog.com': 'Google Workspace' };
+// Matched on the start of host + path, first match wins, so one company's several blogs keep separate names (and separate caps).
+const SOURCES = [
+  ['openai.com', 'OpenAI'], ['blog.google', 'Google'], ['workspaceupdates.googleblog.com', 'Google Workspace'],
+  ['microsoft.com/en-us/power-platform', 'Power Platform'], ['microsoft.com/en-us/microsoft-365', 'Microsoft 365'],
+  ['microsoft.com/en-us/copilot', 'Microsoft 365'], ['blogs.microsoft.com', 'Microsoft'],
+  ['theverge.com', 'The Verge'], ['zapier.com', 'Zapier'], ['news.sap.com', 'SAP'], ['salesforce.com', 'Salesforce'],
+  ['about.fb.com', 'Meta'], ['mistral.ai', 'Mistral'],
+];
 const MAX_AGE_DAYS = 7, PER_SOURCE = 5;
 // n8n's code box has no URL class, so the host is read with a pattern.
 const sourceOf = (link) => {
-  const m = /^https?:\/\/([^\/?#:@]+)/i.exec(String(link));
+  const m = /^https?:\/\/([^\/?#:@]+)([^?#]*)/i.exec(String(link));
   if (!m) return null;
-  const h = m[1].toLowerCase().replace(/^www\./, '');
-  return SOURCES[h] || SOURCES[h.split('.').slice(-2).join('.')] || h;
+  const at = m[1].toLowerCase().replace(/^www\./, '') + m[2];
+  const hit = SOURCES.find(([prefix]) => at.startsWith(prefix));
+  return hit ? hit[1] : m[1].toLowerCase().replace(/^www\./, '');
 };
 const strip = (s) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -23,7 +31,7 @@ for (const { json: it } of $input.all()) {
     date: new Date(t).toISOString(), source,
   });
 }
-const feeds_failed = Object.values(SOURCES).filter(s => !bySource[s]);
+const feeds_failed = [...new Set(SOURCES.map(s => s[1]))].filter(s => !bySource[s]);
 return Object.values(bySource)
   .flatMap(list => list.sort((a, b) => b.date.localeCompare(a.date)).slice(0, PER_SOURCE))
   .map(json => ({ json: { ...json, feeds_failed } }));

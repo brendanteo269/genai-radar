@@ -23,6 +23,8 @@ if (isMain) {
     { title: 'Old Google', link: 'https://blog.google/old', isoDate: iso(30 * day) },
     { title: 'Fresh Google', link: 'https://blog.google/new', isoDate: iso(day) },
     { title: 'MS', link: 'https://www.microsoft.com/en-us/microsoft-365/blog/x', isoDate: iso(2 * day) },
+    { title: 'Copilot Studio', link: 'https://www.microsoft.com/en-us/power-platform/blog/y', isoDate: iso(day) },
+    { title: 'MS corp', link: 'https://blogs.microsoft.com/blog/z', isoDate: iso(day) },
     { title: 'Wrong year', link: 'https://blog.google/future', isoDate: new Date(Date.now() + 300 * day).toISOString() },
     { error: 'feed failed' },
   ];
@@ -30,8 +32,10 @@ if (isMain) {
   assert.equal(kept.filter(k => k.source === 'OpenAI').length, 5, 'caps at 5 per source');
   assert.equal(kept[0].title, 'OpenAI 0', 'newest first');
   assert.deepEqual(kept.filter(k => k.source === 'Google').map(k => k.title), ['Fresh Google'], 'drops items older than 7 days or dated far in the future');
-  assert.equal(kept.find(k => k.source === 'Microsoft 365').source, 'Microsoft 365', 'www. host maps to its source');
-  assert.deepEqual(kept[0].feeds_failed, ['The Verge', 'Zapier', 'Google Workspace'], 'names the feeds that returned nothing fresh');
+  assert.equal(kept.find(k => k.title === 'MS').source, 'Microsoft 365', 'www. host maps to its source');
+  assert.equal(kept.find(k => k.title === 'Copilot Studio').source, 'Power Platform', 'path picks the right Microsoft blog');
+  assert.equal(kept.find(k => k.title === 'MS corp').source, 'Microsoft', 'subdomain blog keeps its own name');
+  assert.deepEqual(kept[0].feeds_failed, ['Google Workspace', 'The Verge', 'Zapier', 'SAP', 'Salesforce', 'Meta', 'Mistral'], 'names the feeds that returned nothing fresh');
   assert.equal(kept[0].snippet, 'hi there', 'strips HTML');
 
   // Check link: public links pass; private, malformed and credential-carrying links are refused.

@@ -18,7 +18,9 @@ every morning                         on demand
      [Get saved cards] -> [Merge cards] -> [Save cards]
 ```
 
-- **Feeds** (`nodes/feeds.js`): OpenAI, Google, Microsoft 365, The Verge AI, Zapier, Google Workspace updates.
+- **Feeds** (`nodes/feeds.js`): OpenAI, Google, Google Workspace updates, Microsoft 365, Microsoft Power Platform, Microsoft corporate blog, SAP News, Salesforce News, Meta Newsroom, Mistral, The Verge AI, Zapier.
+- **Why these suppliers**: public sources report HEINEKEN uses Microsoft (Azure OpenAI, Copilot, Copilot Studio, Dynamics 365, Teams) and SAP (S/4HANA, Business Technology Platform and SAP Business AI behind the Hoppy chatbot). AWS, IBM, Collibra, Solace, Tricentis and Stravito also appear in vendor case studies, but they are infrastructure or publish no readable feed. Google Cloud and Salesforce appear only in a third-party listing.
+- **Source names** (`nodes/keep_recent.js`): matched on the start of host + path, so Microsoft's three blogs stay separate and each gets its own 5-item cap.
 - **Keep recent**: at most 7 days old, 5 newest per source.
 - **Skip seen**: skips links that already have a card or were judged not relevant. The list lives in `cards.json`, so a failed grading is retried next run.
 - **Grade with Claude**: `prompt.md`, model `claude-haiku-5-5`, one HTTP call per item. The reply must be JSON with a fixed set of fields, including `impact` (1 to 3: how big the change is). The page sizes each card by it.
