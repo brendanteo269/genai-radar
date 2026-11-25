@@ -1,9 +1,28 @@
 {
-  "updated": "2026-11-24T17:46:28.354Z",
+  "updated": "2026-11-25T03:17:15.102Z",
   "feeds_failed": [
     "Microsoft 365"
   ],
   "cards": [
+    {
+      "url": "https://openai.com/business/customer-stories/clay-plugins-openai",
+      "title": "Clay sales data tool inside ChatGPT and Codex",
+      "what": "Connects Clay's sales research data to ChatGPT and Codex so users can research deals and build sales plays.",
+      "audiences": [
+        "Sales"
+      ],
+      "try_for": "Ask ChatGPT, using Clay's connection, to summarise a target account before your next visit.",
+      "verdict": "Watch",
+      "impact": 1,
+      "why": "The text is a customer story and does not say how to get access, what it costs, or whether ordinary users can use it yet.",
+      "catch": "The text gives no setup steps, pricing or availability, and it does not show how accurate the results are.",
+      "data_caution": "Do not paste customer contact details, pricing terms or unreleased deal information into any outside tool without checking company data rules first.",
+      "source": "OpenAI",
+      "date": "2026-11-24T00:00:00.000Z",
+      "original_title": "Clay helps sales teams win with Codex and ChatGPT",
+      "graded_at": "2026-11-25T03:17:14.679Z",
+      "model": "claude-haiku-5-5"
+    },
     {
       "url": "https://blog.google/products-and-platforms/products/search/google-search-personal-intelligence-apps/",
       "title": "Google Search that uses your own Drive and Wallet",
@@ -57,6 +76,14 @@
     "https://www.theverge.com/ai-artificial-intelligence/1030422/nvidia-jensen-huang-ai-china-alice-huang",
     "https://zapier.com/blog/zapier-automation-examples",
     "https://zapier.com/blog/workflow-automation",
-    "https://zapier.com/blog/ai-models-on-zapier"
+    "https://zapier.com/blog/ai-models-on-zapier",
+    "https://openai.com/index/gpt-6-models-demonstrate-intrinsic-protein-design-capabilities",
+    "https://openai.com/index/searching-for-distant-planets-with-astra",
+    "https://openai.com/business/customer-stories/ifood",
+    "https://www.theverge.com/tech/1041571/jensen-huang-all-hands-nvidia-apology",
+    "https://www.theverge.com/entertainment/1041417/david-fincher-netflix-cliff-booth-ai-interpositive",
+    "https://zapier.com/blog/what-you-should-automate",
+    "http://workspaceupdates.googleblog.com/2026/11/mcp-servers-cli-standardized-usage-tiers-now-available.html",
+    "http://workspaceupdates.googleblog.com/2026/11/make-messages-in-google-chat-from-apps-and-agents-easier-to-read-with-tables-and-headings.html"
   ]
 }
