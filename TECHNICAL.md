@@ -34,7 +34,7 @@ every morning                         on demand
 | `workflow.json` | Import this into n8n. Built by `build.mjs`; do not edit by hand |
 | `nodes/*.js` | The code inside each n8n code box |
 | `prompt.md` | The grading rules sent to Claude |
-| `index.html` | The page. One file, no framework, no chart library. Text is written with `textContent` only, and links must be http(s) |
+| `index.html` | The page. One file, no framework, no chart library. Text is written with `textContent` only, links must be http(s), and a content security policy limits network requests to the page's own site |
 | `cards.json` | Written by the workflow |
 | `check.mjs` | Self-check for the code boxes: `node check.mjs` |
 
@@ -44,7 +44,7 @@ every morning                         on demand
 2. Open the **GenAI Radar** workflow (import `workflow.json` if it is not listed).
 3. On **Grade with Claude**, add an Anthropic credential (your API key).
 4. On **Get seen list**, **Get saved cards** and **Save cards**, add a GitHub credential: a fine-grained token limited to this repo with Contents read and write.
-5. Press **Execute workflow** once and check the cards.
+5. Press **Execute**, choose **From Every morning**, and check the commit and the cards. (`n8n execute` on the command line does not work here: it only starts workflows that have a manual trigger.)
 6. Publish the workflow so the daily timer and the form are live. The form is at http://localhost:5678/form/grade.
 
 After changing `prompt.md` or anything in `nodes/`: `node check.mjs && node build.mjs`, then re-import `workflow.json`.
@@ -54,11 +54,15 @@ After changing `prompt.md` or anything in `nodes/`: `node check.mjs && node buil
 - **The seen-list lives in `cards.json`**, not in n8n. A link is marked seen only after a clean answer, so a failed or unreadable grading is retried on the next run.
 - **Nothing incomplete is saved.** A reply with a missing field, an unknown verdict or an API error is counted and dropped.
 - **Dropped feeds stay dropped.** A feed that blocks automated readers is removed, not worked around.
-- **Changing the workflow keeps credentials.** `build.mjs` writes `workflow.json` without credentials. To update a running n8n, export the live workflow, replace the `jsCode` of the changed boxes, and import it back.
+- **Changing the workflow keeps credentials.** `build.mjs` writes `workflow.json` without credentials. To update a running n8n, export the live workflow (`npx n8n export:workflow --id=<id>`), replace the `jsCode` of the changed boxes, import it back (`npx n8n import:workflow`), then `npx n8n publish:workflow --id=<id>`. The running n8n picks up the published version without a restart.
 
 ## First real run (25 Nov 2026)
 
 20 items graded: 2 cards, 16 judged not relevant, 2 unreadable replies (retried next run). A manual review of the 16 found 15 clearly not tools (news, developer infrastructure, talks, how-to guides) and 1 borderline. The fix was a better feed (Google Workspace release notes), not a looser prompt.
+
+## Backfill (25 Nov 2026)
+
+A one-off script pulled 225 items from the last 60 days of the feeds. They were graded by hand in Claude Code against `prompt.md`'s rules, not by the workflow: 16 became cards (marked `"model": "backfill-2026-11-25"`), and the other 209 were added to the seen list so the daily run skips them. Most rejects were customer stories, research, policy, partnerships and how-to guides.
 
 ## Known limits
 

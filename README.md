@@ -25,6 +25,8 @@ Every card is auto-graded: Claude read the announcement, and nobody used the too
 
 You can also paste a link into a form to grade one tool on demand.
 
+To start the page with more than a few days of cards, the last two months of announcements were graded once, by hand, in Claude Code against the same rules. Those cards are marked `backfill-2026-11-25` in `cards.json`; every card since comes from the daily run.
+
 ## What the page shows
 
 - Left: pick a source or an audience.
