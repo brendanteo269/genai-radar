@@ -5,139 +5,294 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GenAI Radar</title>
 <meta name="description" content="New AI tools, graded each morning for five kinds of staff at a brewer. An independent project.">
+<!-- The page may only send data to itself and GitHub's API, so an owner token saved here cannot be posted anywhere else. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://api.github.com; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
 <style>
+/* Document-style page: white sheet, quiet sidebar, one reading column. Contrast figures are against --bg. */
 :root {
-  --bg: #f6f4ef; --card: #ffffff; --ink: #1c1b19; --muted: #625f58; --line: #dedad0; --hover: #b9b4a6; --pick: #e9e6dd;
-  --brand: #0a6b3a; --accent: #c8102e;
-  --try: #0a6b3a; --watch: #8a6100; --skip: #6b6861; --tested-bg: #c8102e; --tested-ink: #ffffff; --note-bg: #f1f5ee; --logo-bg: transparent; --axis: #c3c2b7;
+  --bg: #ffffff; --side: #f7f7f5; --card: #ffffff;
+  --ink: #37352f;    /* 12.4:1 */
+  --muted: #6f6e69;  /* 5.2:1, 4.9:1 on --side */
+  --line: #e9e9e7; --hover: #f1f1ef; --pick: #e8e8e5; --shadow: rgba(15, 15, 15, 0.06);
+  --brand: #2b7a4b;  /* 5.3:1, also the chart ink */
+  /* Verdicts are solid pills with white text: 5.3:1, 5.4:1. Skip is a quiet grey pill: 5.9:1. */
+  --try: #2b7a4b; --watch: #8f5f00; --on-solid: #ffffff; --skip-bg: #ebebea; --skip-ink: #5f5e5a;
+  --tested-bg: #37352f; --tested-ink: #ffffff;
+  --note-bg: #f1f1ef; --logo-bg: transparent; --axis: #e1e0dc; --track: #f1f1ef; --err: #b42318;   /* 6.5:1 */
+  /* Audience tags, one hue per kind of staff. Ink on its tint is 5.2:1 or more; ink alone is the dot and bar color. */
+  --a0-bg: #fbe4ee; --a0: #a3305f;   /* Brand & marketing: rose */
+  --a1-bg: #e1ecfa; --a1: #23609e;   /* Sales: blue */
+  --a2-bg: #fbe6d9; --a2: #a6491d;   /* Supply chain & brewery: orange */
+  --a3-bg: #dcf0f1; --a3: #1d6b73;   /* Finance: teal */
+  --a4-bg: #eee6f8; --a4: #6b3fa0;   /* Internal comms & HR: purple */
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #161513; --card: #201f1c; --ink: #f1eee6; --muted: #a9a59b; --line: #36342f; --hover: #5a574f; --pick: #2c2a26;
-    --brand: #2c9a60; --accent: #ff6b7f;
-    --try: #6fd19f; --watch: #e6b84a; --skip: #a9a59b; --tested-bg: #d81e3c; --tested-ink: #ffffff; --note-bg: #1f2a22; --logo-bg: #ffffff; --axis: #4a4842; }
+  :root { --bg: #191919; --side: #202020; --card: #202020;
+    --ink: #e6e6e3;   /* 14.6:1 */
+    --muted: #9b9a97; /* 6.6:1 */
+    --line: #2f2f2f; --hover: #262626; --pick: #2c2c2c; --shadow: rgba(0, 0, 0, 0.3);
+    --brand: #5fb88a; --try: #2f7a52; --watch: #8a5c00; --on-solid: #ffffff; --skip-bg: #2c2c2c; --skip-ink: #b5b4b0;
+    --tested-bg: #e6e6e3; --tested-ink: #191919; --note-bg: #252525; --logo-bg: #ffffff; --axis: #333333; --track: #262626; --err: #ff8a80;
+    --a0-bg: #3d2330; --a0: #f2a6c6; --a1-bg: #1f3047; --a1: #9cc4f2; --a2-bg: #3d2618; --a2: #f2ad84;
+    --a3-bg: #173436; --a3: #86d0d6; --a4-bg: #2f2645; --a4: #c7aef0; }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 4px; }
+html { accent-color: var(--brand); scrollbar-color: var(--axis) transparent; }
+::selection { background: var(--a1-bg); color: var(--ink); }
 
-.shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; }
-aside { position: sticky; top: 32px; align-self: start; }
-h1 { font-size: 26px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.4px; border-left: 5px solid var(--brand); padding-left: 12px; }
-.lede { color: var(--muted); margin: 0 0 6px; font-size: 14px; }
-.meta { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
-aside h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 20px 0 6px; }
-.pick { display: flex; flex-direction: column; gap: 2px; }
-.pick button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 6px 10px; border: 0; border-radius: 6px;
-  background: transparent; text-align: left; font-size: 14px; cursor: pointer; }
-.pick button:hover { background: var(--pick); }
+/* Audience color: tag (tint + ink), dot, and chart fill. */
+.a0 { --t-bg: var(--a0-bg); --t: var(--a0); } .a1 { --t-bg: var(--a1-bg); --t: var(--a1); } .a2 { --t-bg: var(--a2-bg); --t: var(--a2); }
+.a3 { --t-bg: var(--a3-bg); --t: var(--a3); } .a4 { --t-bg: var(--a4-bg); --t: var(--a4); }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 4px; background: var(--t-bg); color: var(--t); font-size: 12px; font-weight: 500; line-height: 1.6; white-space: nowrap; }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.foot .tags { flex-wrap: nowrap; overflow: hidden; }
+.dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--t); }
+
+.shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }
+
+/* Sidebar: like a workspace page tree. */
+aside { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--side); border-right: 1px solid var(--line); padding: 20px 12px 32px; }
+.space { display: flex; align-items: center; gap: 10px; padding: 6px 10px 18px; font-size: 14px; font-weight: 600; }
+.space .mark { width: 22px; height: 22px; border-radius: 5px; background: var(--brand); color: var(--bg); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+aside h2 { font-size: 12px; font-weight: 500; color: var(--muted); margin: 22px 10px 6px; }
+.pick { display: flex; flex-direction: column; gap: 1px; }
+.pick button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 32px; padding: 4px 10px; border: 0; border-radius: 6px;
+  background: transparent; text-align: left; font-size: 14px; color: var(--ink); cursor: pointer; }
+.pick button:hover { background: var(--hover); }
 .pick button[aria-pressed="true"] { background: var(--pick); font-weight: 600; }
-.pick .n { margin-left: auto; color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.pick .n { margin-left: auto; color: var(--muted); font-weight: 400; font-size: 13px; font-variant-numeric: tabular-nums; }
 
-.logo { width: 18px; height: 18px; flex: none; object-fit: contain; background: var(--logo-bg); border-radius: 3px; }
+.logo { width: 18px; height: 18px; flex: none; object-fit: contain; background: var(--logo-bg); border-radius: 4px; }
 .logo.mono { display: inline-grid; place-items: center; background: transparent; border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 600; }
 .logo.big { width: 28px; height: 28px; }
 
-.bento { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); grid-auto-rows: 160px; grid-auto-flow: dense; gap: 16px; }
-.tile { display: flex; flex-direction: column; gap: 8px; padding: 16px; overflow: hidden; text-align: left; cursor: pointer;
-  background: var(--card); border: 1px solid var(--line); border-radius: 10px; transition: border-color 150ms; }
-.tile:hover { border-color: var(--hover); }
+/* The page itself: one generous column. */
+main { width: 100%; max-width: 1000px; margin: 0 auto; padding: 88px 72px 120px; }
+h1 { font-size: 40px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 10px; }
+.lede { font-size: 18px; color: var(--muted); margin: 0 0 28px; }
+.props { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 4px 12px; font-size: 14px; margin: 0 0 40px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+.props dt { color: var(--muted); padding: 4px 0; }
+.props dd { margin: 0; padding: 4px 0; }
+
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-bottom: 48px; }
+.kpi { padding: 4px 24px; border-left: 1px solid var(--line); }
+.kpi:first-child { padding-left: 0; border-left: 0; }
+.kpi .label { font-size: 14px; color: var(--muted); }
+.kpi .value { font-size: 34px; font-weight: 600; line-height: 1.2; margin-top: 6px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+.charts { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; margin-bottom: 16px; }
+.panel h3, .sec { font-size: 14px; font-weight: 600; margin: 0 0 16px; }
+.panel h3 span, .sec span { color: var(--muted); font-weight: 400; }
+.cols { display: flex; align-items: flex-end; gap: 4px; height: 112px; border-bottom: 1px solid var(--axis); }
+.cols .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
+.cols .bar { width: 100%; max-width: 20px; background: var(--brand); border-radius: 3px 3px 0 0; opacity: 0.85; }
+.cols .cap { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.xaxis { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.rows { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px 14px; align-items: center; font-size: 14px; }
+.rows button { display: contents; cursor: pointer; }
+.rows .lab { text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rows button:hover .lab { text-decoration: underline; text-decoration-color: var(--axis); text-underline-offset: 3px; }
+.rows button[aria-pressed="true"] .lab { font-weight: 600; }
+.rows .track { height: 8px; background: var(--track); border-radius: 4px; }
+.rows .fill { height: 100%; min-width: 2px; background: var(--t, var(--brand)); border-radius: 4px; }
+.rows .val { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Gallery view, as in a database page. */
+.sec { margin: 64px 0 0; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.bento { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); grid-auto-rows: 172px; grid-auto-flow: dense; gap: 16px; margin-top: 20px; }
+.tile { display: flex; flex-direction: column; gap: 10px; padding: 18px; overflow: hidden; text-align: left; cursor: pointer;
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 1px 2px var(--shadow); transition: background 120ms, box-shadow 120ms; }
+.tile:hover { background: var(--hover); }
 .tile.s2 { grid-column: span 2; }
 .tile.s3 { grid-column: span 2; grid-row: span 2; }
 .top { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); white-space: nowrap; }
 .top .when { margin-left: auto; }
-.name { font-weight: 600; font-size: 16px; line-height: 1.3; }
-.s3 .name { font-size: 22px; line-height: 1.2; letter-spacing: -0.2px; }
-.what { font-size: 14px; color: var(--muted); }
+.name { flex: none; font-weight: 600; font-size: 16px; line-height: 1.35; }
+.s3 .name { font-size: 22px; line-height: 1.3; letter-spacing: -0.01em; }
+.what { font-size: 14px; color: var(--muted); line-height: 1.55; }
 .clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
 .c2 { -webkit-line-clamp: 2; } .c3 { -webkit-line-clamp: 3; } .c4 { -webkit-line-clamp: 4; }
 .foot { margin-top: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; }
-.verdict { font-weight: 700; }
-.verdict.try { color: var(--try); } .verdict.watch { color: var(--watch); } .verdict.skip { color: var(--skip); }
-.tested { margin-left: auto; padding: 1px 8px; border-radius: 4px; background: var(--tested-bg); color: var(--tested-ink); font-weight: 600; }
+.verdict { flex: none; padding: 1px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1.6; white-space: nowrap; }
+.tile .foot .verdict { margin-left: auto; }
+dialog .foot .tested { margin-left: auto; }
+.verdict.try { background: var(--try); color: var(--on-solid); } .verdict.watch { background: var(--watch); color: var(--on-solid); }
+.verdict.skip { background: var(--skip-bg); color: var(--skip-ink); }
+.tested { flex: none; padding: 1px 8px; border-radius: 4px; background: var(--tested-bg); color: var(--tested-ink); font-size: 12px; font-weight: 600; }
+.kpi.try .value { color: var(--try); }
+@media (prefers-color-scheme: dark) { .kpi.try .value { color: var(--brand); } }
 .auto { margin-left: auto; color: var(--muted); }
-.panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
-.panel h3, .sec { font-size: 13px; font-weight: 600; margin: 0 0 12px; }
-.panel h3 span, .sec span { color: var(--muted); font-weight: 400; }
-.sec { margin: 32px 0 12px; }
-.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
-.kpi .label { font-size: 13px; color: var(--muted); }
-.kpi .value { font-size: 40px; font-weight: 600; line-height: 1.1; margin-top: 4px; letter-spacing: -0.5px; }
-.charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.cols { display: flex; align-items: flex-end; gap: 2px; height: 120px; border-bottom: 1px solid var(--axis); }
-.cols .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
-.cols .bar { width: 100%; max-width: 24px; background: var(--brand); border-radius: 4px 4px 0 0; }
-.cols .cap { font-size: 12px; color: var(--muted); line-height: 1.4; }
-.xaxis { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
-.rows { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; font-size: 13px; }
-.rows button { display: contents; cursor: pointer; }
-.rows .lab { text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rows button[aria-pressed="true"] .lab { font-weight: 600; }
-.rows .track { height: 12px; }
-.rows .fill { height: 100%; min-width: 2px; background: var(--brand); border-radius: 0 4px 4px 0; }
-.rows .val { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
-.empty { color: var(--muted); padding: 24px 0; }
+.empty { color: var(--muted); padding: 32px 0; }
 
-dialog { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 24px; border: 1px solid var(--line); border-radius: 10px;
-  background: var(--card); color: var(--ink); }
-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
-dialog h2 { font-size: 22px; line-height: 1.25; margin: 10px 0 8px; }
-dialog h2 a { color: inherit; text-decoration: underline; text-decoration-color: var(--brand); text-decoration-thickness: 2px; text-underline-offset: 3px; }
-dialog p { margin: 0; }
-.close { float: right; min-width: 36px; min-height: 36px; margin: -8px -8px 0 8px; border: 0; border-radius: 6px; background: transparent; font-size: 22px; line-height: 1; cursor: pointer; }
-.close:hover { background: var(--pick); }
-dl { margin: 14px 0 0; display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; font-size: 15px; }
+/* Card detail opens as a side peek from the right. */
+dialog { margin: 0 0 0 auto; width: min(600px, 100vw); height: 100vh; max-height: none; max-width: 100vw; padding: 56px 48px 48px;
+  border: 0; border-left: 1px solid var(--line); background: var(--bg); color: var(--ink); box-shadow: -12px 0 32px var(--shadow); overflow-y: auto; }
+dialog::backdrop { background: rgba(15, 15, 15, 0.25); }
+dialog h2 { font-size: 30px; line-height: 1.25; font-weight: 700; letter-spacing: -0.015em; margin: 16px 0 12px; }
+dialog h2 a { color: inherit; text-decoration: underline; text-decoration-color: var(--axis); text-decoration-thickness: 1px; text-underline-offset: 5px; }
+dialog h2 a:hover { text-decoration-color: currentColor; }
+dialog > p { margin: 0 0 16px; color: var(--muted); font-size: 16px; }
+.close { position: absolute; top: 14px; right: 14px; min-width: 32px; min-height: 32px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; }
+.close:hover { background: var(--hover); color: var(--ink); }
+dl { margin: 24px 0 0; padding-top: 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 140px 1fr; gap: 12px 16px; font-size: 15px; }
 dt { color: var(--muted); } dd { margin: 0; }
-.mine { margin-top: 14px; padding: 12px; background: var(--note-bg); border-left: 3px solid var(--accent); font-size: 15px; }
-.mine b { display: block; margin-bottom: 4px; }
+.mine { margin-top: 28px; padding: 16px 18px; background: var(--note-bg); border-radius: 6px; font-size: 15px; }
+.mine b { display: block; margin-bottom: 6px; }
 
-details { margin-top: 36px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 15px; max-width: 70ch; }
-details summary { cursor: pointer; color: var(--ink); font-weight: 600; }
-details li { margin-bottom: 6px; }
-footer { margin-top: 28px; color: var(--muted); font-size: 13px; max-width: 70ch; }
+/* Owner-only test form inside the side peek. */
+.owner { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+.test-form { display: grid; gap: 14px; }
+.test-form h3 { font-size: 15px; margin: 0; }
+.test-form label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.test-form small { font-size: 12px; }
+.test-form input, .test-form textarea, .test-form select { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--bg); color: var(--ink); font: inherit; font-size: 15px; resize: vertical; }
+.test-form input:focus, .test-form textarea:focus, .test-form select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 2px var(--a3-bg); }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.btn { min-height: 36px; padding: 6px 14px; border: 1px solid transparent; border-radius: 6px; background: var(--try); color: var(--on-solid); font-size: 14px; font-weight: 600; cursor: pointer; }
+.btn:disabled { opacity: 0.6; cursor: progress; }
+.btn.quiet { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 500; }
+.btn.quiet:hover { background: var(--hover); }
+.btn.link { margin-left: auto; background: none; color: var(--muted); font-weight: 400; padding: 6px 4px; text-decoration: underline; text-underline-offset: 3px; }
+.status { margin: 0; font-size: 14px; color: var(--muted); }
+.status:empty { display: none; }
+.status.ok { margin-top: 20px; color: var(--try); font-weight: 500; }
+.status.err { color: var(--err); }
+.mine div + div { margin-top: 6px; }
+
+/* About the creator: pinned to the foot of the sidebar, opens a small card on hover or click. */
+aside { display: flex; flex-direction: column; }
+.creator-btn { margin-top: auto; position: sticky; bottom: 0; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg); text-align: left; cursor: pointer; box-shadow: 0 1px 2px var(--shadow); transition: background 120ms; }
+aside .pick:last-of-type { margin-bottom: 24px; }
+.creator-btn:hover, .creator-btn[aria-expanded="true"] { background: var(--hover); }
+.creator-btn .who { display: block; font-size: 14px; font-weight: 600; line-height: 1.3; }
+.creator-btn .sub { display: block; font-size: 12px; color: var(--muted); line-height: 1.3; }
+.avatar { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--a1-bg); color: var(--a1); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; }
+.avatar.big { width: 40px; height: 40px; font-size: 14px; }
+
+#creator { position: fixed; inset: auto auto 76px 12px; margin: 0; width: 300px; padding: 18px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--bg); color: var(--ink); box-shadow: 0 12px 32px var(--shadow), 0 2px 6px var(--shadow); }
+.c-head { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.c-name { font-weight: 600; font-size: 15px; }
+.c-line { font-size: 13px; color: var(--muted); line-height: 1.4; }
+#creator ul { list-style: none; margin: 0; padding: 0; }
+.c-links { margin: 10px 0 14px !important; }
+.c-links a { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 4px 8px; margin: 0 -8px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 14px; }
+.c-links a:hover { background: var(--hover); }
+.c-url { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
+.c-proj { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.c-proj a { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 2px 6px; border-radius: 8px; color: var(--ink); text-decoration: none; font-size: 11px; line-height: 1.2; text-align: center; }
+.c-proj a:hover { background: var(--hover); }
+.c-proj img, .c-proj .mono-tile { width: 32px; height: 32px; border-radius: 8px; object-fit: contain; background: var(--logo-bg); border: 1px solid var(--line); padding: 3px; }
+.c-proj .mono-tile { display: grid; place-items: center; background: var(--a2-bg); color: var(--a2); font-weight: 700; font-size: 14px; border: 0; }
+.c-proj span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+/* Toggle block. */
+details { margin-top: 72px; color: var(--muted); font-size: 15px; max-width: 68ch; }
+details summary { cursor: pointer; color: var(--ink); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px; padding: 4px 6px; margin-left: -6px; border-radius: 6px; }
+details summary::-webkit-details-marker { display: none; }
+details summary::before { content: ""; width: 0; height: 0; border-left: 6px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; transition: transform 120ms; }
+details[open] summary::before { transform: rotate(90deg); }
+details summary:hover { background: var(--hover); }
+details > :not(summary) { margin-left: 20px; }
+details li { margin-bottom: 8px; }
+footer { margin-top: 48px; color: var(--muted); font-size: 13px; max-width: 68ch; }
 
 /* Motion: short, once per render, and off for people who ask for less motion. */
 @media (prefers-reduced-motion: no-preference) {
-  .tile { animation: rise 220ms ease-out both; animation-delay: calc(var(--i, 0) * 25ms); transition: border-color 150ms, transform 150ms; }
-  .tile:hover { transform: translateY(-2px); }
+  .tile { animation: rise 240ms ease-out both; animation-delay: calc(var(--i, 0) * 25ms); }
   .cols .bar { transform-origin: bottom; animation: growY 380ms cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 20ms); }
   .rows .fill { transform-origin: left; animation: growX 380ms cubic-bezier(.2, .7, .2, 1) both; }
-  dialog[open] { animation: rise 160ms ease-out both; }
-  dialog[open]::backdrop { animation: fade 160ms ease-out both; }
+  dialog[open] { animation: peek 220ms cubic-bezier(.2, .7, .2, 1) both; }
+  dialog[open]::backdrop { animation: fade 180ms ease-out both; }
+  #creator:popover-open { animation: rise 160ms ease-out both; }
 }
-@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes rise { from { opacity: 0.6; transform: translateY(6px); } }   /* never starts invisible: a paused animation still shows the card */
+@keyframes peek { from { transform: translateX(32px); opacity: 0; } }
 @keyframes fade { from { opacity: 0; } }
 @keyframes growY { from { transform: scaleY(0); } }
 @keyframes growX { from { transform: scaleX(0); } }
+
+@media (max-width: 1100px) { main { padding: 64px 40px 96px; } }
 @media (max-width: 860px) {
-  .shell { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 24px 16px 48px; }
-  aside { position: static; }
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 16px; }
+  .space { padding: 0 0 8px; }
+  aside h2 { margin: 14px 0 6px; }
   .pick { flex-direction: row; flex-wrap: wrap; gap: 6px; }
-  .pick button { width: auto; border: 1px solid var(--line); background: var(--card); }
+  .pick button { width: auto; border: 1px solid var(--line); background: var(--bg); }
   .pick .n { margin-left: 0; }
+  main { padding: 40px 16px 72px; }
+  .creator-btn { position: static; margin-top: 16px; }
+  #creator { inset: auto 16px 16px 16px; width: auto; }
+  h1 { font-size: 32px; }
 }
-@media (max-width: 640px) { .charts { grid-template-columns: minmax(0, 1fr); } .kpi .value { font-size: 30px; } }
+@media (max-width: 640px) {
+  .charts { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .kpi { padding: 0 12px; } .kpi .value { font-size: 28px; }
+  .props { grid-template-columns: 110px minmax(0, 1fr); }
+  dialog { padding: 56px 20px 32px; }
+}
 @media (max-width: 520px) {
   .bento { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
   .tile.s2, .tile.s3 { grid-column: auto; grid-row: auto; }
-  dl { grid-template-columns: 1fr; gap: 0; } dt { margin-top: 8px; font-size: 13px; }
+  dialog dl { grid-template-columns: 1fr; gap: 0; } dialog dt { margin-top: 12px; font-size: 13px; }
 }
 </style>
 </head>
 <body>
 <div class="shell">
   <aside>
-    <h1>GenAI Radar</h1>
-    <p class="lede">New AI tools, graded daily for brewery staff.</p>
-    <p class="meta" id="meta">Loading…</p>
+    <div class="space"><span class="mark" aria-hidden="true">R</span>GenAI Radar</div>
     <h2 id="h-src">Source</h2>
     <div class="pick" id="sources" role="group" aria-labelledby="h-src"></div>
     <h2 id="h-aud">Audience</h2>
     <div class="pick" id="audiences" role="group" aria-labelledby="h-aud"></div>
-    <div class="pick" id="show" role="group" aria-label="Show" style="margin-top:20px"></div>
+    <h2 id="h-show">Show</h2>
+    <div class="pick" id="show" role="group" aria-labelledby="h-show"></div>
+
+    <button class="creator-btn" id="creator-btn" type="button" popovertarget="creator" popovertargetaction="show">
+      <span class="avatar" aria-hidden="true">BT</span>
+      <span><span class="who">About the creator</span><span class="sub">Brendan Teo</span></span>
+    </button>
   </aside>
 
+  <div id="creator" popover aria-label="About the creator">
+    <div class="c-head">
+      <span class="avatar big" aria-hidden="true">BT</span>
+      <div><div class="c-name">Brendan Teo</div><div class="c-line">Built GenAI Radar with n8n and Claude.</div></div>
+    </div>
+    <ul class="c-links">
+      <li><a href="https://www.linkedin.com/in/brendanteohaoyi" target="_blank" rel="noopener noreferrer">
+        <img class="logo" src="https://www.linkedin.com/favicon.ico" alt="" referrerpolicy="no-referrer"><span>LinkedIn</span><span class="c-url">brendanteohaoyi</span></a></li>
+      <li><a href="https://brendanteo.vercel.app" target="_blank" rel="noopener noreferrer">
+        <img class="logo" src="https://brendanteo.vercel.app/favicon.svg" alt="" referrerpolicy="no-referrer"><span>Website</span><span class="c-url">brendanteo.vercel.app</span></a></li>
+    </ul>
+    <div class="c-label" id="c-proj">Other projects</div>
+    <ul class="c-proj" aria-labelledby="c-proj">
+      <li><a href="https://www.ducket.io" target="_blank" rel="noopener noreferrer"><img src="https://www.ducket.io/favicon.svg" alt="" referrerpolicy="no-referrer"><span>Ducket</span></a></li>
+      <li><a href="https://homing-sg.vercel.app/" target="_blank" rel="noopener noreferrer"><span class="mono-tile" aria-hidden="true">H</span><span>Homing</span></a></li>
+      <li><a href="https://pokepoketcg.com" target="_blank" rel="noopener noreferrer"><img src="https://pokepoketcg.com/favicon.png" alt="" referrerpolicy="no-referrer"><span>PokePoke</span></a></li>
+      <li><a href="https://main.daj4zg03zzpyx.amplifyapp.com" target="_blank" rel="noopener noreferrer"><img src="https://main.daj4zg03zzpyx.amplifyapp.com/favicon.ico" alt="" referrerpolicy="no-referrer"><span>shoulderspeak</span></a></li>
+    </ul>
+  </div>
+
   <main>
+    <h1>GenAI Radar</h1>
+    <p class="lede">New AI tools, graded daily for brewery staff.</p>
+    <dl class="props">
+      <dt>Updated</dt><dd id="meta">Loading…</dd>
+      <dt>Graded for</dt><dd>Brand &amp; marketing, Sales, Supply chain &amp; brewery, Finance, Internal comms &amp; HR</dd>
+      <dt>Made with</dt><dd>n8n and Claude</dd>
+    </dl>
+
     <div class="kpis" id="kpis"></div>
     <div class="charts" id="charts"></div>
     <h2 class="sec" id="sec">Latest</h2>
@@ -196,6 +351,14 @@ function logo(source, big) {
   return img;
 }
 const verdictNode = (c) => { const v = verdictOf(c); return el("span", "verdict " + v.split(" ")[0].toLowerCase(), v); };
+const aud = (a) => { const i = AUDIENCES.indexOf(a); return i < 0 ? "" : "a" + i; };
+const tagsOf = (list, max) => {
+  const known = (list || []).filter(a => aud(a)).slice(0, max || 5);
+  if (!known.length) return null;
+  const box = el("div", "tags");
+  for (const a of known) box.append(el("span", "tag " + aud(a), a));
+  return box;
+};
 
 function pickButton(label, pressed, onclick, count, withLogo) {
   const b = el("button");
@@ -216,7 +379,11 @@ function renderSidebar() {
     pickButton("All", state.source === "All", () => { state.source = "All"; render(); }, state.cards.length),
     ...sources.map(s => pickButton(s, state.source === s, () => { state.source = s; render(); }, counts[s], true)));
   document.getElementById("audiences").replaceChildren(
-    ...["All", ...AUDIENCES].map(a => pickButton(a, state.audience === a, () => { state.audience = a; render(); })));
+    ...["All", ...AUDIENCES].map(a => {
+      const b = pickButton(a, state.audience === a, () => { state.audience = a; render(); });
+      if (aud(a)) b.prepend(el("span", "dot " + aud(a)));
+      return b;
+    }));
   document.getElementById("show").replaceChildren(
     pickButton("Tested by me", state.testedOnly, () => { state.testedOnly = !state.testedOnly; render(); },
       state.cards.filter(c => c.test).length));
@@ -227,12 +394,15 @@ function tile(c) {
   const b = el("button", "tile s" + size);
   b.type = "button";
   const top = el("div", "top");
-  top.append(logo(c.source), el("span", null, c.source || ""), el("span", "when", day(c.date, { day: "numeric", month: "short" })));
-  b.append(top, el("div", "name clamp " + (size === 1 ? "c3" : "c2"), c.title));
+  top.append(logo(c.source), el("span", null, c.source || ""));
+  if (c.test) top.append(el("span", "tested", "Tested"));
+  top.append(el("span", "when", day(c.date, { day: "numeric", month: "short" })));
+  b.append(top, el("div", "name clamp c2", c.title));
   if (size > 1) b.append(el("div", "what clamp " + (size === 3 ? "c4" : "c2"), c.what));
   const foot = el("div", "foot");
+  const tags = tagsOf(c.audiences, size === 1 ? 1 : 3);
+  if (tags) foot.append(tags);
   foot.append(verdictNode(c));
-  if (c.test) foot.append(el("span", "tested", "Tested"));
   b.append(foot);
   b.onclick = () => openDetail(c);
   return b;
@@ -241,8 +411,8 @@ function tile(c) {
 const WEEK = 7 * 864e5;
 const panel = (title, note) => { const p = el("section", "panel"); const h = el("h3", null, title); if (note) h.append(" ", el("span", null, note)); p.append(h); return p; };
 
-function kpi(label, value, hero) {
-  const p = el("section", "panel kpi" + (hero ? " hero" : ""));
+function kpi(label, value, cls) {
+  const p = el("section", "panel kpi" + (cls ? " " + cls : ""));
   p.append(el("div", "label", label), el("div", "value", value));
   return p;
 }
@@ -255,7 +425,7 @@ function barRows(pairs, picked, onPick) {
     const row = el(onPick ? "button" : "div");
     if (onPick) { row.type = "button"; row.setAttribute("aria-pressed", String(picked === name)); row.onclick = () => onPick(name); }
     else row.style.display = "contents";
-    const track = el("span", "track"), fill = el("div", "fill");
+    const track = el("span", "track"), fill = el("div", "fill " + aud(name));
     fill.style.width = (n / max * 100) + "%";
     if (n) track.append(fill);
     row.append(el("span", "lab", name), track, el("span", "val", n));
@@ -269,8 +439,8 @@ function renderDashboard(list) {
   const week = list.filter(c => now - Date.parse(c.date) < WEEK);
   const count = (f) => list.filter(f).length;
   document.getElementById("kpis").replaceChildren(
-    kpi("New this week", week.length, true),
-    kpi("Try now", count(c => verdictOf(c) === "Try now")),
+    kpi("New this week", week.length),
+    kpi("Try now", count(c => verdictOf(c) === "Try now"), "try"),
     kpi("Tested by me", count(c => c.test)));
 
   // New cards per day, last 14 days, by announcement date.
@@ -302,7 +472,7 @@ function renderDashboard(list) {
   sec.replaceChildren("Latest ", el("span", null, list.length));
 }
 
-function openDetail(c) {
+function openDetail(c, note) {
   const dlg = document.getElementById("detail");
   const close = el("button", "close", "×");
   close.type = "button"; close.setAttribute("aria-label", "Close"); close.onclick = () => dlg.close();
@@ -316,8 +486,8 @@ function openDetail(c) {
   foot.append(verdictNode(c), c.test ? el("span", "tested", "Tested by me") : el("span", "auto", "Auto-graded"));
 
   const dl = el("dl");
-  const add = (k, val) => { if (val) dl.append(el("dt", null, k), el("dd", null, val)); };
-  add("Best for", (c.audiences || []).join(", "));
+  const add = (k, val) => { if (!val) return; const dd = el("dd"); dd.append(val); dl.append(el("dt", null, k), dd); };
+  add("Best for", tagsOf(c.audiences));
   add("Try it for", c.try_for);
   add("Why", c.why);
   add("Catch", c.catch);
@@ -331,7 +501,103 @@ function openDetail(c) {
     for (const k of ["tried", "worked", "went_wrong"]) if (c.test[k]) m.append(el("div", null, c.test[k]));
     dlg.append(m);
   }
-  dlg.showModal();
+  if (note) dlg.append(el("p", "status ok", note));
+  if (isOwner()) dlg.append(testEditor(c));
+  if (!dlg.open) dlg.showModal();
+}
+
+// Owner tools: mark a card as tested from this page. Shown only after opening the page with #owner, or once a token is saved.
+// The token is a fine-grained GitHub token for this repo only (Contents: read and write). It stays in this browser.
+const GH_FILE = "https://api.github.com/repos/brendanteo269/genai-radar/contents/tested.json";
+const tokenStore = {
+  get() { try { return localStorage.getItem("radar-gh-token") || ""; } catch { return ""; } },
+  set(v) { try { v ? localStorage.setItem("radar-gh-token", v) : localStorage.removeItem("radar-gh-token"); } catch {} },
+};
+const isOwner = () => location.hash === "#owner" || !!tokenStore.get();
+const toB64 = (s) => { let t = ""; for (const b of new TextEncoder().encode(s)) t += String.fromCharCode(b); return btoa(t); };
+const fromB64 = (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, "")), ch => ch.charCodeAt(0)));
+
+async function saveTest(token, c, entry) {
+  const headers = { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" };
+  const got = await fetch(GH_FILE, { headers, cache: "no-store" });
+  if (got.status === 401) throw Object.assign(new Error("GitHub rejected the token. Paste it again."), { badToken: true });
+  if (!got.ok) throw new Error("Could not read tested.json from GitHub (" + got.status + ").");
+  const file = await got.json();
+  const data = JSON.parse(fromB64(file.content));
+  data.tests = { ...(data.tests || {}), [c.url]: entry };
+  const put = await fetch(GH_FILE, { method: "PUT", headers, body: JSON.stringify({
+    message: "Tested: " + String(c.title).slice(0, 60), content: toB64(JSON.stringify(data, null, 2) + "\n"), sha: file.sha }) });
+  if (put.status === 401 || put.status === 403) throw Object.assign(new Error("This token cannot write to the repo. It needs Contents: read and write."), { badToken: true });
+  if (put.status === 409) throw new Error("tested.json changed while saving. Press Save again.");
+  if (!put.ok) throw new Error("GitHub refused the save (" + put.status + ").");
+}
+
+function testEditor(c) {
+  const box = el("section", "owner");
+  const start = el("button", "btn quiet", c.test ? "Edit my test notes" : "Mark as tested");
+  start.type = "button";
+  box.append(start);
+  start.onclick = () => {
+    const t = c.test || {};
+    const form = el("form", "test-form");
+    const field = (label, input, hint) => { const l = el("label"); l.append(el("span", null, label), input); if (hint) l.append(el("small", null, hint)); form.append(l); return input; };
+    const input = (type, value, extra = {}) => { const i = el("input"); i.type = type; i.value = value ?? ""; Object.assign(i, extra); return i; };
+    const area = (value, required) => { const a = el("textarea"); a.rows = 2; a.value = value || ""; a.required = !!required; a.maxLength = 600; return a; };
+    form.append(el("h3", null, c.test ? "Edit my test notes" : "Mark as tested"));
+    const verdict = el("select");
+    for (const v of ["Try now", "Watch", "Skip"]) { const o = el("option", null, v); o.value = v; o.selected = v === (t.verdict || verdictOf(c)); verdict.append(o); }
+    const f = {
+      verdict: field("My verdict", verdict),
+      tested_on: field("Tested on", input("date", t.tested_on || new Date().toLocaleDateString("en-CA"), { required: true })),
+      minutes: field("Minutes spent", input("number", t.minutes, { min: 1, max: 600 })),
+      tried: field("What I tried", area(t.tried, true)),
+      worked: field("What worked", area(t.worked)),
+      went_wrong: field("What went wrong", area(t.went_wrong)),
+    };
+    const token = tokenStore.get() ? null : field("GitHub token", input("password", "", { required: true, autocomplete: "off" }),
+      "Fine-grained token, this repo only, Contents read and write. Kept in this browser.");
+    const status = el("p", "status"); status.setAttribute("aria-live", "polite");
+    const row = el("div", "row");
+    const save = el("button", "btn", "Save"); save.type = "submit";
+    const cancel = el("button", "btn quiet", "Cancel"); cancel.type = "button"; cancel.onclick = () => form.replaceWith(start);
+    row.append(save, cancel);
+    if (tokenStore.get()) { const forget = el("button", "btn link", "Forget token"); forget.type = "button";
+      forget.onclick = () => { tokenStore.set(""); openDetail(c); }; row.append(forget); }
+    form.append(status, row);
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const entry = { tested_on: f.tested_on.value, verdict: f.verdict.value };
+      if (+f.minutes.value > 0) entry.minutes = +f.minutes.value;
+      for (const k of ["tried", "worked", "went_wrong"]) if (f[k].value.trim()) entry[k] = f[k].value.trim();
+      const tok = token ? token.value.trim() : tokenStore.get();
+      save.disabled = true; status.className = "status"; status.textContent = "Saving to GitHub…";
+      try {
+        await saveTest(tok, c, entry);
+        tokenStore.set(tok);
+        c.test = entry;
+        state.cards.sort((a, b) => (b.test ? 1 : 0) - (a.test ? 1 : 0) || String(b.date).localeCompare(String(a.date)));
+        render();
+        openDetail(c, "Saved. The live site shows it after Vercel redeploys, in about a minute.");
+      } catch (err) {
+        if (err.badToken) tokenStore.set("");
+        status.className = "status err"; status.textContent = err.message || "Save failed.";
+        save.disabled = false;
+      }
+    };
+    start.replaceWith(form);
+    form.querySelector("select").focus();
+  };
+  return box;
+}
+// Creator card also opens on hover where there is a mouse. Click, Esc and clicking outside work everywhere.
+{
+  const btn = document.getElementById("creator-btn"), card = document.getElementById("creator");
+  let t;
+  const hoverable = matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const open = () => { clearTimeout(t); if (!card.matches(":popover-open")) card.showPopover(); };
+  const later = () => { clearTimeout(t); t = setTimeout(() => card.matches(":popover-open") && card.hidePopover(), 300); };
+  if (hoverable && card.showPopover) for (const n of [btn, card]) { n.addEventListener("mouseenter", open); n.addEventListener("mouseleave", later); }
+  for (const img of card.querySelectorAll("img")) img.onerror = () => { img.style.visibility = "hidden"; };
 }
 document.getElementById("detail").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
@@ -353,7 +619,7 @@ async function load() {
     const tests = testedRes.ok ? ((await testedRes.json()).tests || {}) : {};
     state.cards = (data.cards || []).map(c => ({ ...c, test: tests[c.url] || null }))
       .sort((a, b) => (b.test ? 1 : 0) - (a.test ? 1 : 0) || String(b.date).localeCompare(String(a.date)));
-    meta.textContent = data.updated ? "Updated " + day(data.updated) : "";
+    meta.textContent = data.updated ? day(data.updated) : "—";
     if ((data.feeds_failed || []).length) document.getElementById("quiet").textContent = "Nothing new this week from: " + data.feeds_failed.join(", ") + ".";
     render();
   } catch (e) {
