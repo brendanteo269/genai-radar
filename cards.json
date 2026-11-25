@@ -1,7 +1,9 @@
 {
-  "updated": "2026-11-25T03:17:15.102Z",
+  "updated": "2026-11-25T04:08:07.482Z",
   "feeds_failed": [
-    "Microsoft 365"
+    "Microsoft 365",
+    "Microsoft",
+    "Mistral"
   ],
   "cards": [
     {
@@ -56,7 +58,7 @@
       "data_caution": "Do not connect accounts or Drive folders holding confidential pricing, contracts or customer data without IT or legal approval.",
       "source": "Google",
       "date": "2026-11-23T17:00:00.000Z",
-      "original_title": "A more tailored Google Search that\u2019s uniquely yours",
+      "original_title": "A more tailored Google Search that’s uniquely yours",
       "graded_at": "2026-11-24T17:46:28.021Z",
       "model": "claude-haiku-5-5"
     },
@@ -273,7 +275,7 @@
       "data_caution": "None beyond normal care.",
       "source": "Google",
       "date": "2026-11-10T14:00:00+00:00",
-      "original_title": "We\u2019re bringing Adobe\u2019s creative and productivity tools closer to your everyday Google apps.",
+      "original_title": "We’re bringing Adobe’s creative and productivity tools closer to your everyday Google apps.",
       "graded_at": "2026-11-25T03:31:51.611979+00:00",
       "model": "backfill-2026-11-25"
     },
@@ -611,6 +613,17 @@
     "https://openai.com/index/towards-safety-cases-for-frontier-ai-training",
     "https://openai.com/index/lenfest-ai-collaborative-expansion",
     "https://openai.com/index/basis-tax-workbook-with-astra",
-    "https://openai.com/form/codex-originals"
+    "https://openai.com/form/codex-originals",
+    "https://www.microsoft.com/en-us/power-platform/blog/power-pages/discover-and-review-power-pages-sites-with-power-platform-inventory-public-preview/",
+    "https://news.sap.com/2026/11/how-atlas-copco-group-makes-skills-visible-throughout-organization/",
+    "https://news.sap.com/2026/11/less-code-more-context-how-ai-is-reshaping-developer-role/",
+    "https://news.sap.com/2026/11/how-sap-store-certification-turns-into-customer-trust-for-vertex/",
+    "https://news.sap.com/2026/11/interview-sindhu-gangadharan-sap-labs-india/",
+    "https://news.sap.com/2026/11/how-sap-microsoft-innovate-deliver-ai-value-enterprise/",
+    "https://www.salesforce.com/news/stories/cyber-week-ai-sales-2026/",
+    "https://www.salesforce.com/news/press-releases/2026/11/19/salesforce-si-export-consortium/",
+    "https://about.fb.com/news/2026/11/researchers-using-meta-open-weight-ai-models-medical-breakthroughs/",
+    "https://about.fb.com/news/2026/11/advancing-science-together-highlights-from-the-open-source-ai-for-science-summit/",
+    "https://about.fb.com/news/2026/11/meta-premieres-indias-first-government-led-microdrama-series-on-scams-awareness/"
   ]
 }
