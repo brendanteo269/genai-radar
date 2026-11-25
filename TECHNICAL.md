@@ -24,7 +24,6 @@ every morning                         on demand
 - **Grade with Claude**: `prompt.md`, model `claude-haiku-5-5`, one HTTP call per item. The reply must be JSON with a fixed set of fields, including `impact` (1 to 3: how big the change is). The page sizes each card by it.
 - **Make cards**: drops replies that are not relevant, not JSON, or missing a field. Nothing incomplete is saved.
 - **Save cards**: commits `cards.json` to GitHub; the page redeploys.
-- **Tested by me**: open the page with `#owner` at the end of the address, open a card, and press **Mark as tested**. The first save asks for a fine-grained GitHub token (this repo only, Contents read and write); it stays in that browser. The page commits your notes to `tested.json`, keyed by the card's link, and Vercel redeploys. Tested cards are shown first. **Forget token** in the same form removes it. The page's content security policy only lets it send data to itself and `api.github.com`.
 
 ## Files
 
@@ -35,7 +34,6 @@ every morning                         on demand
 | `prompt.md` | The grading rules sent to Claude |
 | `index.html` | The page. One file, no framework, no chart library. Text is written with `textContent` only, and links must be http(s) |
 | `cards.json` | Written by the workflow |
-| `tested.json` | Written by the page's owner form, or by hand |
 | `check.mjs` | Self-check for the code boxes: `node check.mjs` |
 
 ## Setup

@@ -4,7 +4,7 @@ Written 2026-11-24 for the HEINEKEN GenAI Intern application. Target: a live lin
 
 ## 1. What it is
 
-**Simple:** a web page that updates itself. Each day it finds new AI tools, and for each one it writes a short card: what it does, who at a beer company would use it, and whether it is worth trying. Cards you tested yourself are marked as tested.
+**Simple:** a web page that updates itself. Each day it finds new AI tools, and for each one it writes a short card: what it does, who at a beer company would use it, and whether it is worth trying. Every card says it was graded from the announcement alone.
 
 **Technical:** a scheduled n8n workflow reads RSS feeds, removes items it has seen, sends each new item to Claude with a fixed grading prompt that returns JSON, and commits the result to a `cards.json` file in a GitHub repo. A static page on Vercel reads that file and renders the cards. A second n8n entry point (a form) grades any single tool on demand, for live demos.
 
@@ -69,27 +69,25 @@ Exact node names get confirmed against your n8n version when building. A feed th
 | Verdict | Try now / Watch / Skip |
 | Catch | "Check the totals yourself" |
 | Data caution | "Do not paste customer or pricing data into a personal account" |
-| Label | **Auto-graded** or **Tested by me** |
-| If tested | What you tried, how long it took, what went wrong |
+| Label | **Auto-graded** |
 
-The label is the important design choice: a machine's opinion never passes as a tested one. Same idea as Kermillion's Checked label.
+The label is the important design choice: a machine's opinion is always marked as one. (A "Tested by me" label was planned, built, then removed on 2026-11-25.)
 
 ## 5. Build list
 
 **Must have (today):**
 1. The 5-box daily flow running in n8n on your laptop
 2. The web page live on Vercel with at least 10 cards
-3. 3 cards tested by you, with your own notes
-4. The on-demand form (box 1b), because it is the demo
-5. A "How this works and where it is weak" section on the page
+3. The on-demand form (box 1b), because it is the demo
+4. A "How this works and where it is weak" section on the page
 
 **Should have (if time, about 1 hour):**
-6. Audience filter buttons (the five groups above)
-7. A weekly "top 3" short post drafted by Claude from that week's cards, which you edit before it shows. This matches "create internal content such as short posts".
+5. Audience filter buttons (the five groups above)
+6. A weekly "top 3" short post drafted by Claude from that week's cards, which you edit before it shows. This matches "create internal content such as short posts".
 
 **Later (not today):**
 - Running on a server so it updates with the laptop off
-- A "try it in 10 minutes" exercise on each tested card, as workshop material
+- A "try it in 10 minutes" exercise on each card, as workshop material
 - A Make version of the same flow
 - Telegram or email digest
 
@@ -98,7 +96,6 @@ The label is the important design choice: a machine's opinion never passes as a 
 ## 6. Done when
 
 - The link opens on a phone and shows 10 or more cards
-- 3 cards say "Tested by me"
 - The flow has run once on its timer without you touching it
 - Pasting a new tool link into the form produces a card on the page in under 2 minutes
 - You can explain each box, and the grading prompt, without notes
@@ -108,10 +105,10 @@ The label is the important design choice: a machine's opinion never passes as a 
 | Time | What you show | What you say |
 |---|---|---|
 | 0:00 | The page on your phone | "This updates itself every morning with new AI tools, graded for five kinds of staff at a brewer." |
-| 0:30 | One "Tested by me" card | "This one I tried myself. Here is what went wrong." |
+| 0:30 | One "Try now" card | "This one is for sales. Here is the task to try, and the catch." |
 | 1:00 | The n8n canvas, 5 boxes | "Timer, feeds, skip what it has seen, Claude grades, save." |
 | 1:40 | Paste a tool the viewer names into the form | "Give me any AI tool." The card appears. |
-| 2:30 | The "where it is weak" section | "Auto-graded cards are opinions from an announcement. That is why the label exists." |
+| 2:30 | The "where it is weak" section | "Every card is an opinion from an announcement. That is why the label exists." |
 
 Record this as a 90-second screen video too, in case the live flow fails during a call.
 
@@ -138,7 +135,7 @@ Record this as a 90-second screen video too, in case the live flow fails during 
 
 ## 10. What you must be able to explain
 
-- Why two labels exist, and what "Auto-graded" does not tell you
+- What "Auto-graded" does and does not tell you
 - How the flow avoids grading the same item twice
 - What happens when Claude returns a malformed answer
 - Why the page is a static file and not an app

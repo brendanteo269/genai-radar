@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GenAI Radar</title>
 <meta name="description" content="New AI tools, graded each morning for five kinds of staff at a brewer. An independent project.">
-<!-- The page may only send data to itself and GitHub's API, so an owner token saved here cannot be posted anywhere else. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://api.github.com; form-action 'none'; base-uri 'none'; object-src 'none'">
+<!-- The page loads data only from itself; images may come from other sites (source logos). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style>
 /* Document-style page: white sheet, quiet sidebar, one reading column. Contrast figures are against --bg. */
@@ -18,8 +18,7 @@
   --brand: #2b7a4b;  /* 5.3:1, also the chart ink */
   /* Verdicts are solid pills with white text: 5.3:1, 5.4:1. Skip is a quiet grey pill: 5.9:1. */
   --try: #2b7a4b; --watch: #8f5f00; --on-solid: #ffffff; --skip-bg: #ebebea; --skip-ink: #5f5e5a;
-  --tested-bg: #37352f; --tested-ink: #ffffff;
-  --note-bg: #f1f1ef; --logo-bg: transparent; --axis: #e1e0dc; --track: #f1f1ef; --err: #b42318;   /* 6.5:1 */
+  --logo-bg: transparent; --axis: #e1e0dc; --track: #f1f1ef;
   /* Audience tags, one hue per kind of staff. Ink on its tint is 5.2:1 or more; ink alone is the dot and bar color. */
   --a0-bg: #fbe4ee; --a0: #a3305f;   /* Brand & marketing: rose */
   --a1-bg: #e1ecfa; --a1: #23609e;   /* Sales: blue */
@@ -33,7 +32,7 @@
     --muted: #9b9a97; /* 6.6:1 */
     --line: #2f2f2f; --hover: #262626; --pick: #2c2c2c; --shadow: rgba(0, 0, 0, 0.3);
     --brand: #5fb88a; --try: #2f7a52; --watch: #8a5c00; --on-solid: #ffffff; --skip-bg: #2c2c2c; --skip-ink: #b5b4b0;
-    --tested-bg: #e6e6e3; --tested-ink: #191919; --note-bg: #252525; --logo-bg: #ffffff; --axis: #333333; --track: #262626; --err: #ff8a80;
+    --logo-bg: #ffffff; --axis: #333333; --track: #262626;
     --a0-bg: #3d2330; --a0: #f2a6c6; --a1-bg: #1f3047; --a1: #9cc4f2; --a2-bg: #3d2618; --a2: #f2ad84;
     --a3-bg: #173436; --a3: #86d0d6; --a4-bg: #2f2645; --a4: #c7aef0; }
 }
@@ -120,10 +119,8 @@ h1 { font-size: 40px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02e
 .foot { margin-top: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .verdict { flex: none; padding: 1px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1.6; white-space: nowrap; }
 .tile .foot .verdict { margin-left: auto; }
-dialog .foot .tested { margin-left: auto; }
 .verdict.try { background: var(--try); color: var(--on-solid); } .verdict.watch { background: var(--watch); color: var(--on-solid); }
 .verdict.skip { background: var(--skip-bg); color: var(--skip-ink); }
-.tested { flex: none; padding: 1px 8px; border-radius: 4px; background: var(--tested-bg); color: var(--tested-ink); font-size: 12px; font-weight: 600; }
 .kpi.try .value { color: var(--try); }
 @media (prefers-color-scheme: dark) { .kpi.try .value { color: var(--brand); } }
 .auto { margin-left: auto; color: var(--muted); }
@@ -141,29 +138,6 @@ dialog > p { margin: 0 0 16px; color: var(--muted); font-size: 16px; }
 .close:hover { background: var(--hover); color: var(--ink); }
 dl { margin: 24px 0 0; padding-top: 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 140px 1fr; gap: 12px 16px; font-size: 15px; }
 dt { color: var(--muted); } dd { margin: 0; }
-.mine { margin-top: 28px; padding: 16px 18px; background: var(--note-bg); border-radius: 6px; font-size: 15px; }
-.mine b { display: block; margin-bottom: 6px; }
-
-/* Owner-only test form inside the side peek. */
-.owner { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
-.test-form { display: grid; gap: 14px; }
-.test-form h3 { font-size: 15px; margin: 0; }
-.test-form label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
-.test-form small { font-size: 12px; }
-.test-form input, .test-form textarea, .test-form select { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
-  background: var(--bg); color: var(--ink); font: inherit; font-size: 15px; resize: vertical; }
-.test-form input:focus, .test-form textarea:focus, .test-form select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 2px var(--a3-bg); }
-.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.btn { min-height: 36px; padding: 6px 14px; border: 1px solid transparent; border-radius: 6px; background: var(--try); color: var(--on-solid); font-size: 14px; font-weight: 600; cursor: pointer; }
-.btn:disabled { opacity: 0.6; cursor: progress; }
-.btn.quiet { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 500; }
-.btn.quiet:hover { background: var(--hover); }
-.btn.link { margin-left: auto; background: none; color: var(--muted); font-weight: 400; padding: 6px 4px; text-decoration: underline; text-underline-offset: 3px; }
-.status { margin: 0; font-size: 14px; color: var(--muted); }
-.status:empty { display: none; }
-.status.ok { margin-top: 20px; color: var(--try); font-weight: 500; }
-.status.err { color: var(--err); }
-.mine div + div { margin-top: 6px; }
 
 /* About the creator: pinned to the foot of the sidebar, opens a small card on hover or click. */
 aside { display: flex; flex-direction: column; }
@@ -255,8 +229,6 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; max-width: 68ch
     <div class="pick" id="sources" role="group" aria-labelledby="h-src"></div>
     <h2 id="h-aud">Audience</h2>
     <div class="pick" id="audiences" role="group" aria-labelledby="h-aud"></div>
-    <h2 id="h-show">Show</h2>
-    <div class="pick" id="show" role="group" aria-labelledby="h-show"></div>
 
     <button class="creator-btn" id="creator-btn" type="button" popovertarget="creator" popovertargetaction="show">
       <span class="avatar" aria-hidden="true">BT</span>
@@ -305,7 +277,7 @@ footer { margin-top: 48px; color: var(--muted); font-size: 13px; max-width: 68ch
         <li>Claude fills in the same form for every item: what it does, who it is for, one task to try, a verdict, a catch, and how big the change is.</li>
         <li>The card is saved and this page shows it. A bigger change gets a bigger card.</li>
       </ol>
-      <p><b>Two labels.</b> “Auto-graded” means Claude read an announcement. Nobody used the tool. “Tested by me” means I tried it and wrote the notes myself.</p>
+      <p><b>Every card is auto-graded.</b> Claude read an announcement. Nobody used the tool.</p>
       <ul>
         <li>Auto-graded cards can overrate a tool, because announcements are written to impress.</li>
         <li>The feeds are a small sample, not the whole market. <span id="quiet"></span></li>
@@ -328,7 +300,7 @@ const LOGOS = {
   "The Verge": "https://www.theverge.com/favicon.ico", "Zapier": "https://zapier.com/favicon.ico",
 };
 const SIZE_WORDS = { 1: "Small tweak", 2: "New feature", 3: "New capability" };
-const state = { source: "All", audience: "All", testedOnly: false, cards: [] };
+const state = { source: "All", audience: "All", cards: [] };
 
 const el = (tag, cls, text) => {
   const n = document.createElement(tag);
@@ -338,7 +310,7 @@ const el = (tag, cls, text) => {
 };
 const safeUrl = (u) => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch { return null; } };
 const day = (iso, opts) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("en-SG", opts || { day: "numeric", month: "short", year: "numeric" }); };
-const verdictOf = (c) => (c.test && c.test.verdict) || c.verdict || "Watch";
+const verdictOf = (c) => c.verdict || "Watch";
 // Card size: Claude's 1-3 "how big is this change" score. Cards graded before that score existed fall back to the verdict.
 const sizeOf = (c) => [1, 2, 3].includes(c.impact) ? c.impact : (verdictOf(c) === "Try now" ? 2 : 1);
 
@@ -384,9 +356,6 @@ function renderSidebar() {
       if (aud(a)) b.prepend(el("span", "dot " + aud(a)));
       return b;
     }));
-  document.getElementById("show").replaceChildren(
-    pickButton("Tested by me", state.testedOnly, () => { state.testedOnly = !state.testedOnly; render(); },
-      state.cards.filter(c => c.test).length));
 }
 
 function tile(c) {
@@ -395,7 +364,6 @@ function tile(c) {
   b.type = "button";
   const top = el("div", "top");
   top.append(logo(c.source), el("span", null, c.source || ""));
-  if (c.test) top.append(el("span", "tested", "Tested"));
   top.append(el("span", "when", day(c.date, { day: "numeric", month: "short" })));
   b.append(top, el("div", "name clamp c2", c.title));
   if (size > 1) b.append(el("div", "what clamp " + (size === 3 ? "c4" : "c2"), c.what));
@@ -441,7 +409,7 @@ function renderDashboard(list) {
   document.getElementById("kpis").replaceChildren(
     kpi("New this week", week.length),
     kpi("Try now", count(c => verdictOf(c) === "Try now"), "try"),
-    kpi("Tested by me", count(c => c.test)));
+    kpi("All cards", list.length));
 
   // New cards per day, last 14 days, by announcement date.
   const days = Array.from({ length: 14 }, (_, i) => { const d = new Date(now - (13 - i) * 864e5); d.setHours(0, 0, 0, 0); return { d, n: 0 }; });
@@ -472,7 +440,7 @@ function renderDashboard(list) {
   sec.replaceChildren("Latest ", el("span", null, list.length));
 }
 
-function openDetail(c, note) {
+function openDetail(c) {
   const dlg = document.getElementById("detail");
   const close = el("button", "close", "×");
   close.type = "button"; close.setAttribute("aria-label", "Close"); close.onclick = () => dlg.close();
@@ -483,7 +451,7 @@ function openDetail(c, note) {
   if (href) { const a = el("a", null, c.title); a.href = href; a.rel = "noopener noreferrer"; a.target = "_blank"; h.append(a); }
   else h.textContent = c.title;
   const foot = el("div", "foot");
-  foot.append(verdictNode(c), c.test ? el("span", "tested", "Tested by me") : el("span", "auto", "Auto-graded"));
+  foot.append(verdictNode(c), el("span", "auto", "Auto-graded"));
 
   const dl = el("dl");
   const add = (k, val) => { if (!val) return; const dd = el("dd"); dd.append(val); dl.append(el("dt", null, k), dd); };
@@ -495,99 +463,7 @@ function openDetail(c, note) {
   add("Size of change", SIZE_WORDS[c.impact]);
 
   dlg.replaceChildren(close, top, h, el("p", null, c.what), foot, dl);
-  if (c.test) {
-    const m = el("div", "mine");
-    m.append(el("b", null, "What I found" + (c.test.minutes ? " (" + c.test.minutes + " min test, " + day(c.test.tested_on) + ")" : "")));
-    for (const k of ["tried", "worked", "went_wrong"]) if (c.test[k]) m.append(el("div", null, c.test[k]));
-    dlg.append(m);
-  }
-  if (note) dlg.append(el("p", "status ok", note));
-  if (isOwner()) dlg.append(testEditor(c));
-  if (!dlg.open) dlg.showModal();
-}
-
-// Owner tools: mark a card as tested from this page. Shown only after opening the page with #owner, or once a token is saved.
-// The token is a fine-grained GitHub token for this repo only (Contents: read and write). It stays in this browser.
-const GH_FILE = "https://api.github.com/repos/brendanteo269/genai-radar/contents/tested.json";
-const tokenStore = {
-  get() { try { return localStorage.getItem("radar-gh-token") || ""; } catch { return ""; } },
-  set(v) { try { v ? localStorage.setItem("radar-gh-token", v) : localStorage.removeItem("radar-gh-token"); } catch {} },
-};
-const isOwner = () => location.hash === "#owner" || !!tokenStore.get();
-const toB64 = (s) => { let t = ""; for (const b of new TextEncoder().encode(s)) t += String.fromCharCode(b); return btoa(t); };
-const fromB64 = (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, "")), ch => ch.charCodeAt(0)));
-
-async function saveTest(token, c, entry) {
-  const headers = { Authorization: "Bearer " + token, Accept: "application/vnd.github+json" };
-  const got = await fetch(GH_FILE, { headers, cache: "no-store" });
-  if (got.status === 401) throw Object.assign(new Error("GitHub rejected the token. Paste it again."), { badToken: true });
-  if (!got.ok) throw new Error("Could not read tested.json from GitHub (" + got.status + ").");
-  const file = await got.json();
-  const data = JSON.parse(fromB64(file.content));
-  data.tests = { ...(data.tests || {}), [c.url]: entry };
-  const put = await fetch(GH_FILE, { method: "PUT", headers, body: JSON.stringify({
-    message: "Tested: " + String(c.title).slice(0, 60), content: toB64(JSON.stringify(data, null, 2) + "\n"), sha: file.sha }) });
-  if (put.status === 401 || put.status === 403) throw Object.assign(new Error("This token cannot write to the repo. It needs Contents: read and write."), { badToken: true });
-  if (put.status === 409) throw new Error("tested.json changed while saving. Press Save again.");
-  if (!put.ok) throw new Error("GitHub refused the save (" + put.status + ").");
-}
-
-function testEditor(c) {
-  const box = el("section", "owner");
-  const start = el("button", "btn quiet", c.test ? "Edit my test notes" : "Mark as tested");
-  start.type = "button";
-  box.append(start);
-  start.onclick = () => {
-    const t = c.test || {};
-    const form = el("form", "test-form");
-    const field = (label, input, hint) => { const l = el("label"); l.append(el("span", null, label), input); if (hint) l.append(el("small", null, hint)); form.append(l); return input; };
-    const input = (type, value, extra = {}) => { const i = el("input"); i.type = type; i.value = value ?? ""; Object.assign(i, extra); return i; };
-    const area = (value, required) => { const a = el("textarea"); a.rows = 2; a.value = value || ""; a.required = !!required; a.maxLength = 600; return a; };
-    form.append(el("h3", null, c.test ? "Edit my test notes" : "Mark as tested"));
-    const verdict = el("select");
-    for (const v of ["Try now", "Watch", "Skip"]) { const o = el("option", null, v); o.value = v; o.selected = v === (t.verdict || verdictOf(c)); verdict.append(o); }
-    const f = {
-      verdict: field("My verdict", verdict),
-      tested_on: field("Tested on", input("date", t.tested_on || new Date().toLocaleDateString("en-CA"), { required: true })),
-      minutes: field("Minutes spent", input("number", t.minutes, { min: 1, max: 600 })),
-      tried: field("What I tried", area(t.tried, true)),
-      worked: field("What worked", area(t.worked)),
-      went_wrong: field("What went wrong", area(t.went_wrong)),
-    };
-    const token = tokenStore.get() ? null : field("GitHub token", input("password", "", { required: true, autocomplete: "off" }),
-      "Fine-grained token, this repo only, Contents read and write. Kept in this browser.");
-    const status = el("p", "status"); status.setAttribute("aria-live", "polite");
-    const row = el("div", "row");
-    const save = el("button", "btn", "Save"); save.type = "submit";
-    const cancel = el("button", "btn quiet", "Cancel"); cancel.type = "button"; cancel.onclick = () => form.replaceWith(start);
-    row.append(save, cancel);
-    if (tokenStore.get()) { const forget = el("button", "btn link", "Forget token"); forget.type = "button";
-      forget.onclick = () => { tokenStore.set(""); openDetail(c); }; row.append(forget); }
-    form.append(status, row);
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const entry = { tested_on: f.tested_on.value, verdict: f.verdict.value };
-      if (+f.minutes.value > 0) entry.minutes = +f.minutes.value;
-      for (const k of ["tried", "worked", "went_wrong"]) if (f[k].value.trim()) entry[k] = f[k].value.trim();
-      const tok = token ? token.value.trim() : tokenStore.get();
-      save.disabled = true; status.className = "status"; status.textContent = "Saving to GitHub…";
-      try {
-        await saveTest(tok, c, entry);
-        tokenStore.set(tok);
-        c.test = entry;
-        state.cards.sort((a, b) => (b.test ? 1 : 0) - (a.test ? 1 : 0) || String(b.date).localeCompare(String(a.date)));
-        render();
-        openDetail(c, "Saved. The live site shows it after Vercel redeploys, in about a minute.");
-      } catch (err) {
-        if (err.badToken) tokenStore.set("");
-        status.className = "status err"; status.textContent = err.message || "Save failed.";
-        save.disabled = false;
-      }
-    };
-    start.replaceWith(form);
-    form.querySelector("select").focus();
-  };
-  return box;
+  dlg.showModal();
 }
 // Creator card also opens on hover where there is a mouse. Click, Esc and clicking outside work everywhere.
 {
@@ -605,7 +481,7 @@ function render() {
   renderSidebar();
   const list = state.cards.filter(c =>
     (state.source === "All" || c.source === state.source) &&
-    (state.audience === "All" || (c.audiences || []).includes(state.audience)) && (!state.testedOnly || c.test));
+    (state.audience === "All" || (c.audiences || []).includes(state.audience)));
   renderDashboard(list);
   document.getElementById("cards").replaceChildren(...(list.length ? list.map((c, i) => { const t = tile(c); t.style.setProperty("--i", Math.min(i, 12)); return t; }) : [el("p", "empty", "No cards match this filter yet.")]));
 }
@@ -613,12 +489,10 @@ function render() {
 async function load() {
   const meta = document.getElementById("meta");
   try {
-    const [cardsRes, testedRes] = await Promise.all([fetch("cards.json", { cache: "no-store" }), fetch("tested.json", { cache: "no-store" })]);
+    const cardsRes = await fetch("cards.json", { cache: "no-store" });
     if (!cardsRes.ok) throw new Error("cards.json returned " + cardsRes.status);
     const data = await cardsRes.json();
-    const tests = testedRes.ok ? ((await testedRes.json()).tests || {}) : {};
-    state.cards = (data.cards || []).map(c => ({ ...c, test: tests[c.url] || null }))
-      .sort((a, b) => (b.test ? 1 : 0) - (a.test ? 1 : 0) || String(b.date).localeCompare(String(a.date)));
+    state.cards = (data.cards || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
     meta.textContent = data.updated ? day(data.updated) : "—";
     if ((data.feeds_failed || []).length) document.getElementById("quiet").textContent = "Nothing new this week from: " + data.feeds_failed.join(", ") + ".";
     render();

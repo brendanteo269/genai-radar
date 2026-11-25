@@ -12,12 +12,9 @@ An independent project by Brendan Teo, built with HEINEKEN's Global GenAI Lab in
 - A verdict: Try now, Watch, or Skip
 - The catch, and what company data not to put in
 
-## Two kinds of card
+## How far to trust a card
 
-- **Auto-graded.** Claude read the announcement. Nobody used the tool.
-- **Tested.** I tried the tool myself and wrote what worked and what went wrong.
-
-The page keeps these apart on purpose. An announcement is written to impress, so a card based only on it can overrate a tool.
+Every card is auto-graded: Claude read the announcement, and nobody used the tool. An announcement is written to impress, so a card can overrate a tool. Each card links to the original announcement so you can check.
 
 ## How it works
 
@@ -31,7 +28,7 @@ You can also paste a link into a form to grade one tool on demand.
 ## What the page shows
 
 - Left: pick a source or an audience.
-- Top: how many cards are new this week, how many are worth trying now, and how many I tested.
+- Top: how many cards are new this week, how many are worth trying now, and how many cards there are in all.
 - Below: the cards. A bigger change gets a bigger card. Click one for the detail.
 
 ## Where it is weak
